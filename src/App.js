@@ -46,8 +46,8 @@ class App extends Component {
     const newFood = this.state.inventory.food -= foodLost
     this.setState({progress: {miles: newMiles, days: newDays}})
     this.setState({inventory: {food: newFood}})
-    const newPeopleList = this.state.people.map(function (character) { character.health -= 5; return character })
-    // console.log(this.state.people)
+    const lostHealth = this.state.inventory.food > 0 ? 5 : 20
+    const newPeopleList = this.state.people.map(function (character) { character.health -= lostHealth; return character })
     this.setState({people: newPeopleList})
   }
 
