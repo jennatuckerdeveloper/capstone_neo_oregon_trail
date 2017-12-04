@@ -6,6 +6,10 @@ class App extends Component {
   constructor (props) {
     super(props)
     this.state = {
+      game: {
+        gameState: 'playing',
+        difficulty: 1
+      },
       progress: {
         days: 12,
         miles: 123
@@ -18,15 +22,15 @@ class App extends Component {
       people: [{
         name: 'You',
         health: 100,
-        status: null
+        status: 'alive'
       }, {
         name: 'Jim',
         health: 100,
-        status: null
+        status: 'dead'
       }, {
         name: 'Sallie',
         health: 100,
-        status: null
+        status: 'alive'
       }
       ]}
     this.onUserPlay = this.onUserPlay.bind(this)
@@ -40,9 +44,10 @@ class App extends Component {
 
   walk () {
     const milesGained = this.rangeGenerator(12, 25)
-    const foodLost = this.rangeGenerator(10, 20)
     const newMiles = this.state.progress.miles += milesGained
     const newDays = this.state.progress.days += 1
+    const peopleLiving = this.state.people.length - this.state.people.filter(function (character) { return character.status === 'dead' }).length
+    const foodLost = this.rangeGenerator(2 * peopleLiving, 5 * peopleLiving)
     const newFood = this.state.inventory.food -= foodLost
     this.setState({progress: {miles: newMiles, days: newDays}})
     this.setState({inventory: {food: newFood}})
