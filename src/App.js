@@ -46,13 +46,26 @@ class App extends Component {
     const newFood = this.state.inventory.food -= foodLost
     this.setState({progress: {miles: newMiles, days: newDays}})
     this.setState({inventory: {food: newFood}})
+    const newPeopleList = this.state.people.map(function (character) { character.health -= 5; return character })
+    // console.log(this.state.people)
+    this.setState({people: newPeopleList})
   }
 
   onUserPlay (e) {
-    if (e.keyCode === 13) {
+    if (e.keyCode === 13 || e.keyCode === 32) {
       if (e.target.value === '1') {
         this.walk()
       }
+    }
+  }
+
+  healthRepresentation (healthScore) {
+    if (healthScore <= 100 && healthScore >= 85) {
+      return 'good'
+    } else if (healthScore < 85 && healthScore >= 65) {
+      return 'fair'
+    } else {
+      return 'poor'
     }
   }
 
@@ -66,7 +79,7 @@ class App extends Component {
           <br />
           Food: {this.state.inventory.food}
           <br />
-          Health: {this.state.people[1].health}
+          Health: {this.healthRepresentation(this.state.people[1].health)}
         </div>
         <div id='gameMessage'> x </div>
         <div id='gameMenu' >
