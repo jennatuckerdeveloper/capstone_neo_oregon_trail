@@ -75,27 +75,33 @@ class App extends Component {
   }
 
   render () {
-    return (
-      <div className='App'>
-        <div id='gameStatus' >
-          Days on the trail: {this.state.progress.days}
-          <br />
-          Miles: {this.state.progress.miles}
-          <br />
-          Food: {this.state.inventory.food}
-          <br />
-          Health: {this.healthRepresentation(this.state.people[1].health)}
+    if (this.state.game.gameState === 'playing') {
+      return (
+        <div className='App'>
+          <div id='gameStatus' >
+            Days on the trail: {this.state.progress.days}
+            <br />
+            Miles: {this.state.progress.miles}
+            <br />
+            Food: {this.state.inventory.food}
+            <br />
+            Health: {this.healthRepresentation(this.state.people[1].health)}
+          </div>
+          <div id='gameMessage'> x </div>
+          <div id='gameMenu' >
+            What do you want to do?
+            <br />
+            1. Walk on.
+            <br />
+            <input type='text' id='play' maxLength='1' onKeyDown={this.onUserPlay} />
+          </div>
         </div>
-        <div id='gameMessage'> x </div>
-        <div id='gameMenu' >
-          What do you want to do?
-          <br />
-          1. Walk on.
-          <br />
-          <input type='text' id='play' maxLength='1' onKeyDown={this.onUserPlay} />
-        </div>
-      </div>
-    )
+      )
+    } else if (this.state.game.gameState !== 'playing') {
+      return (
+        <div> ready for next page </div>
+      )
+    }
   }
 }
 
