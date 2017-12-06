@@ -1,13 +1,14 @@
 import React, { Component } from 'react'
-import logo from './logo.svg'
 import './App.css'
+import PlayMenu from './PlayMenu'
+import Naming from './Naming'
 
 class App extends Component {
   constructor (props) {
     super(props)
     this.state = {
       game: {
-        gameState: 'playing',
+        gameState: 'naming',
         difficulty: 1
       },
       progress: {
@@ -24,16 +25,28 @@ class App extends Component {
         health: 100,
         status: 'alive'
       }, {
-        name: 'Jim',
+        name: '',
         health: 100,
         status: 'dead'
       }, {
-        name: 'Sallie',
+        name: '',
+        health: 100,
+        status: 'alive'
+      },
+      {
+        name: '',
+        health: 100,
+        status: 'alive'
+      },
+      {
+        name: '',
         health: 100,
         status: 'alive'
       }
       ]}
     this.onUserPlay = this.onUserPlay.bind(this)
+    this.handleName = this.handleName.bind(this)
+    this.onConfirm = this.onConfirm.bind(this)
   }
 
   rangeGenerator (lowest, highest) {
@@ -42,13 +55,17 @@ class App extends Component {
     return Math.floor(Math.random() * (max - min)) + min
   }
 
+  // This is causing an error message saying that I am directly mutating state.  Why?
   walk () {
     const milesGained = this.rangeGenerator(12, 25)
-    const newMiles = this.state.progress.miles += milesGained
-    const newDays = this.state.progress.days += 1
+    let newMiles = this.state.progress.miles
+    newMiles += milesGained
+    let newDays = this.state.progress.days
+    newDays += 1
     const peopleLiving = this.state.people.length - this.state.people.filter(function (character) { return character.status === 'dead' }).length
     const foodLost = this.rangeGenerator(2 * peopleLiving, 5 * peopleLiving)
-    const newFood = this.state.inventory.food -= foodLost
+    let newFood = this.state.inventory.food
+    newFood -= foodLost
     this.setState({progress: {miles: newMiles, days: newDays}})
     this.setState({inventory: {food: newFood}})
     const lostHealth = this.state.inventory.food > 0 ? 5 : 20
@@ -74,32 +91,41 @@ class App extends Component {
     }
   }
 
+  handleName (e) {
+    const nameIndex = e.target.id.slice(0, 1)
+    const name = e.target.value
+    const peopleList = this.state.people.map((person) => Object.assign({}, person))
+    peopleList[nameIndex]['name'] = name
+    this.setState({people: peopleList})
+  }
+
+  onConfirm (e) {
+    if (e.target.value === 'y') {
+      this.setState({game: {gameState: 'playing'}})
+    }
+  }
+
   render () {
-    if (this.state.game.gameState === 'playing') {
+    if (this.state.game.gameState === 'naming') {
       return (
-        <div className='App'>
-          <div id='gameStatus' >
-            Days on the trail: {this.state.progress.days}
-            <br />
-            Miles: {this.state.progress.miles}
-            <br />
-            Food: {this.state.inventory.food}
-            <br />
-            Health: {this.healthRepresentation(this.state.people[1].health)}
-          </div>
-          <div id='gameMessage'> x </div>
-          <div id='gameMenu' >
-            What do you want to do?
-            <br />
-            1. Walk on.
-            <br />
-            <input type='text' id='play' maxLength='1' onKeyDown={this.onUserPlay} />
-          </div>
-        </div>
+        <Naming
+          handleName={this.handleName}
+          onConfirm={this.onConfirm}
+        />
       )
-    } else if (this.state.game.gameState !== 'playing') {
+    } else if (this.state.game.gameState === 'playing') {
       return (
-        <div> ready for next page </div>
+        <PlayMenu
+          days={this.state.progress.days}
+          miles={this.state.progress.miles}
+          food={this.state.inventory.food}
+          health={this.healthRepresentation(this.state.people[1].health)}
+          onUserPlay={this.onUserPlay}
+        />
+      )
+    } else if (this.state.game.gameState === 'packing') {
+      return (
+        <div> ready to make packing page </div>
       )
     }
   }
