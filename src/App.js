@@ -3,12 +3,31 @@ import './App.css'
 import PlayMenu from './PlayMenu'
 import Naming from './Naming'
 
+const NAMING = 'naming'
+const PLAYING = 'playing'
+const PACKING = 'packing'
+const YOU = 'You'
+const DEAD = 'dead'
+const ALIVE = 'alive'
+const RETURN = 13
+const SPACEBAR = 32
+const GOOD = 'good'
+const FAIR = 'fair'
+const POOR = 'poor'
+const Y = 'y'
+
+const rangeGenerator = function (lowest, highest) {
+  const min = Math.ceil(lowest)
+  const max = Math.floor(highest)
+  return Math.floor(Math.random() * (max - min)) + min
+}
+
 class App extends Component {
   constructor (props) {
     super(props)
     this.state = {
       game: {
-        gameState: 'naming',
+        gameState: NAMING,
         difficulty: 1
       },
       progress: {
@@ -21,27 +40,27 @@ class App extends Component {
         food: 200
       },
       people: [{
-        name: 'You',
+        name: YOU,
         health: 100,
-        status: 'alive'
+        status: ALIVE
       }, {
         name: '',
         health: 100,
-        status: 'dead'
+        status: DEAD
       }, {
         name: '',
         health: 100,
-        status: 'alive'
+        status: ALIVE
       },
       {
         name: '',
         health: 100,
-        status: 'alive'
+        status: ALIVE
       },
       {
         name: '',
         health: 100,
-        status: 'alive'
+        status: ALIVE
       }
       ]}
     this.onUserPlay = this.onUserPlay.bind(this)
@@ -49,33 +68,30 @@ class App extends Component {
     this.onConfirm = this.onConfirm.bind(this)
   }
 
-  rangeGenerator (lowest, highest) {
-    const min = Math.ceil(lowest)
-    const max = Math.floor(highest)
-    return Math.floor(Math.random() * (max - min)) + min
-  }
-
-  // This is causing an error message saying that I am directly mutating state.  Why?
   walk () {
-    const milesGained = this.rangeGenerator(12, 25)
+    const milesGained = rangeGenerator(12, 25)
     let newMiles = this.state.progress.miles
     newMiles += milesGained
     let newDays = this.state.progress.days
     newDays += 1
-    const peopleLiving = this.state.people.length - this.state.people.filter(function (character) { return character.status === 'dead' }).length
-    const foodLost = this.rangeGenerator(2 * peopleLiving, 5 * peopleLiving)
+    const peopleList = this.state.people
+    const peopleLiving = peopleList.filter((character) => character.status !== DEAD).length
+    const foodLost = rangeGenerator(2 * peopleLiving, 5 * peopleLiving)
     let newFood = this.state.inventory.food
     newFood -= foodLost
-    this.setState({progress: {miles: newMiles, days: newDays}})
-    this.setState({inventory: {food: newFood}})
     const lostHealth = this.state.inventory.food > 0 ? 5 : 20
     const newPeopleList = this.state.people.map(function (character) { character.health -= lostHealth; return character })
-    this.setState({people: newPeopleList})
+    this.setState({
+      progress: {miles: newMiles, days: newDays},
+      inventory: {food: newFood},
+      people: newPeopleList
+    })
   }
 
   onUserPlay (e) {
-    if (e.keyCode === 13 || e.keyCode === 32) {
+    if (e.keyCode === RETURN || e.keyCode === SPACEBAR) {
       if (e.target.value === '1') {
+        console.log('currentState', this.state)
         this.walk()
       }
     }
@@ -83,11 +99,11 @@ class App extends Component {
 
   healthRepresentation (healthScore) {
     if (healthScore <= 100 && healthScore >= 85) {
-      return 'good'
+      return GOOD
     } else if (healthScore < 85 && healthScore >= 65) {
-      return 'fair'
+      return FAIR
     } else {
-      return 'poor'
+      return POOR
     }
   }
 
@@ -100,30 +116,30 @@ class App extends Component {
   }
 
   onConfirm (e) {
-    if (e.target.value === 'y') {
-      this.setState({game: {gameState: 'playing'}})
+    if (e.target.value.toLowerCase() === Y) {
+      this.setState({game: {gameState: PLAYING}})
     }
   }
 
   render () {
-    if (this.state.game.gameState === 'naming') {
+    if (this.state.game.gameState === NAMING) {
       return (
         <Naming
           handleName={this.handleName}
           onConfirm={this.onConfirm}
         />
       )
-    } else if (this.state.game.gameState === 'playing') {
+    } else if (this.state.game.gameState === PLAYING) {
       return (
         <PlayMenu
           days={this.state.progress.days}
           miles={this.state.progress.miles}
           food={this.state.inventory.food}
-          health={this.healthRepresentation(this.state.people[1].health)}
+          health={this.healthRepresentation(100)}
           onUserPlay={this.onUserPlay}
         />
       )
-    } else if (this.state.game.gameState === 'packing') {
+    } else if (this.state.game.gameState === PACKING) {
       return (
         <div> ready to make packing page </div>
       )
