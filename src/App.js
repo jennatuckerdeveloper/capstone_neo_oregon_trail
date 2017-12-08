@@ -2,10 +2,11 @@ import React, { Component } from 'react'
 import './App.css'
 import PlayMenu from './PlayMenu'
 import Naming from './Naming'
+import DifficultyPage from './DifficultyPage'
 
+const DIFFICULTY = 'difficulty'
 const NAMING = 'naming'
 const PLAYING = 'playing'
-const PACKING = 'packing'
 const YOU = 'You'
 const DEAD = 'dead'
 const ALIVE = 'alive'
@@ -27,8 +28,8 @@ class App extends Component {
     super(props)
     this.state = {
       game: {
-        gameState: NAMING,
-        difficulty: 1
+        gameState: DIFFICULTY,
+        difficulty: 'notSet'
       },
       progress: {
         days: 12,
@@ -37,7 +38,7 @@ class App extends Component {
       inventory: {
         waterFilter: 12,
         sleepingBags: 3,
-        food: 200
+        food: 50
       },
       people: [{
         name: YOU,
@@ -66,6 +67,7 @@ class App extends Component {
     this.onUserPlay = this.onUserPlay.bind(this)
     this.handleName = this.handleName.bind(this)
     this.onConfirm = this.onConfirm.bind(this)
+    this.handleDifficulty = this.handleDifficulty.bind(this)
   }
 
   walk () {
@@ -91,7 +93,6 @@ class App extends Component {
   onUserPlay (e) {
     if (e.keyCode === RETURN || e.keyCode === SPACEBAR) {
       if (e.target.value === '1') {
-        console.log('currentState', this.state)
         this.walk()
       }
     }
@@ -121,6 +122,18 @@ class App extends Component {
     }
   }
 
+  handleDifficulty (e) {
+    if (e.keyCode === RETURN || e.keyCode === SPACEBAR) {
+      const userChoice = parseInt(e.target.value, 10)
+      if ([1, 2, 3].includes(userChoice)) {
+        const gameObject = Object.assign({}, this.state.game)
+        gameObject['difficulty'] = userChoice
+        gameObject['gameState'] = NAMING
+        this.setState({game: gameObject})
+      }
+    }
+  }
+
   render () {
     if (this.state.game.gameState === NAMING) {
       return (
@@ -139,11 +152,15 @@ class App extends Component {
           onUserPlay={this.onUserPlay}
         />
       )
-    } else if (this.state.game.gameState === PACKING) {
+    } else if (this.state.game.gameState === DIFFICULTY) {
       return (
-        <div> ready to make packing page </div>
+        <DifficultyPage
+          handleDifficulty={this.handleDifficulty}
+        />
       )
-    }
+    } return (
+      <div>page changed</div>
+    )
   }
 }
 
