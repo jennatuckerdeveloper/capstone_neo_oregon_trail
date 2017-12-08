@@ -125,8 +125,8 @@ class App extends Component {
   handleDifficulty (e) {
     if (e.keyCode === RETURN || e.keyCode === SPACEBAR) {
       const userChoice = parseInt(e.target.value, 10)
-      if (userChoice === 1 || userChoice === 2 || userChoice === 3) {
-        const gameObject = this.state.game
+      if ([1, 2, 3].includes(userChoice)) {
+        const gameObject = Object.assign({}, this.state.game)
         gameObject['difficulty'] = userChoice
         gameObject['gameState'] = NAMING
         this.setState({game: gameObject})
