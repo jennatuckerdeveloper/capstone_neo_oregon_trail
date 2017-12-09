@@ -26,3 +26,10 @@
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
+
+p {
+  display: flex;
+  align-content: space-between;
+  justify-content: space-between;
+  margin-right: 30vw
+}

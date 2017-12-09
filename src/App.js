@@ -2,11 +2,19 @@ import React, { Component } from 'react'
 import './App.css'
 import PlayMenu from './PlayMenu'
 import Naming from './Naming'
+import Pack from './Pack'
+import PackItem from './PackItem'
 import DifficultyPage from './DifficultyPage'
 
+// finish handleNumberToPack
+// figure out if there will be a PackItem component (probably)
+
 const DIFFICULTY = 'difficulty'
+const PACKING = 'packing'
+const ITEM = 'packItem'
 const NAMING = 'naming'
 const PLAYING = 'playing'
+const CHANGING = 'changing'
 const YOU = 'You'
 const DEAD = 'dead'
 const ALIVE = 'alive'
@@ -23,12 +31,24 @@ const rangeGenerator = function (lowest, highest) {
   return Math.floor(Math.random() * (max - min)) + min
 }
 
+const packingMenu = ['waterFilter', 'solarPanel', 'gps', 'tent', 'sleepingBag', 'clothing', 'food']
+
+const itemRepresentation = [
+  'water filters',
+  'solar panels',
+  'gps device',
+  'tents',
+  'sleeping bags',
+  'sets of clothes',
+  'pounds of food'
+]
+
 class App extends Component {
   constructor (props) {
     super(props)
     this.state = {
       game: {
-        gameState: DIFFICULTY,
+        gameState: PACKING,
         difficulty: 'notSet'
       },
       progress: {
@@ -36,9 +56,13 @@ class App extends Component {
         miles: 123
       },
       inventory: {
-        waterFilter: 12,
-        sleepingBags: 3,
-        food: 50
+        waterFilter: 0,
+        solarPanel: 0,
+        gps: 0,
+        tent: 0,
+        sleepingBag: 0,
+        clothing: 0,
+        food: 0
       },
       people: [{
         name: YOU,
@@ -66,8 +90,11 @@ class App extends Component {
       ]}
     this.onUserPlay = this.onUserPlay.bind(this)
     this.handleName = this.handleName.bind(this)
-    this.onConfirm = this.onConfirm.bind(this)
+    this.onConfirmNames = this.onConfirmNames.bind(this)
     this.handleDifficulty = this.handleDifficulty.bind(this)
+    this.onPackingChoice = this.onPackingChoice.bind(this)
+    this.confirmPacking = this.confirmPacking.bind(this)
+    this.handleNumberToPack = this.handleNumberToPack.bind(this)
   }
 
   walk () {
@@ -116,9 +143,47 @@ class App extends Component {
     this.setState({people: peopleList})
   }
 
-  onConfirm (e) {
+  onConfirmNames (e) {
     if (e.target.value.toLowerCase() === Y) {
-      this.setState({game: {gameState: PLAYING}})
+      this.setState({game: {gameState: PACKING}})
+    }
+  }
+
+  onPackingChoice (e) {
+    const userChoice = parseInt(e.target.value, 10)
+    if ((e.keyCode === RETURN || e.keyCode === SPACEBAR) && [1, 2, 3, 4, 5, 6, 7].includes(userChoice)) {
+      const gameObject = Object.assign({}, this.state.game)
+      gameObject['gameState'] = ITEM
+      const inventoryChange = Object.assign({}, this.state.inventory)
+      const itemInventoryKey = packingMenu[userChoice - 1]
+      inventoryChange[itemInventoryKey] = CHANGING
+      this.setState({
+        game: gameObject,
+        inventory: inventoryChange
+      })
+    }
+  }
+
+  itemChanging (inventoryObject) {
+    for (let item in inventoryObject) {
+      if (inventoryObject[item] === CHANGING) {
+        return itemRepresentation[packingMenu.indexOf(item)]
+      }
+    }
+  }
+
+  handleNumberToPack (e) {
+    if (e.keyCode === RETURN || e.keyCode === SPACEBAR) {
+      const userChoice = e.target.value
+      console.log(userChoice)
+    }
+  }
+
+  confirmPacking (e) {
+    if (e.keyCode === RETURN || e.keyCode === SPACEBAR) {
+      const gameObject = Object.assign({}, this.state.game)
+      gameObject['gameState'] = PLAYING
+      this.setState({game: gameObject})
     }
   }
 
@@ -139,7 +204,22 @@ class App extends Component {
       return (
         <Naming
           handleName={this.handleName}
-          onConfirm={this.onConfirm}
+          onConfirm={this.onConfirmNames}
+        />
+      )
+    } else if (this.state.game.gameState === PACKING) {
+      return (
+        <Pack
+          waterFilter={this.state.inventory.waterFilter}
+          solarPanel={this.state.inventory.solarPanel}
+          gps={this.state.inventory.gps}
+          tent={this.state.inventory.tent}
+          sleepingBag={this.state.inventory.sleepingBag}
+          clothing={this.state.inventory.clothing}
+          food={this.state.inventory.food}
+          onPackingChoice={this.onPackingChoice}
+          confirmPacking={this.confirmPacking}
+
         />
       )
     } else if (this.state.game.gameState === PLAYING) {
@@ -148,7 +228,7 @@ class App extends Component {
           days={this.state.progress.days}
           miles={this.state.progress.miles}
           food={this.state.inventory.food}
-          health={this.healthRepresentation(100)}
+          health={this.healthRepresentation(this.state.people[0])}
           onUserPlay={this.onUserPlay}
         />
       )
@@ -158,9 +238,18 @@ class App extends Component {
           handleDifficulty={this.handleDifficulty}
         />
       )
-    } return (
-      <div>page changed</div>
-    )
+    } else if (this.state.game.gameState === ITEM) {
+      return (
+        <div id='itemPack'>
+          <p>How many {this.itemChanging(this.state.inventory)} do you want to pack? <input id='numberToPack' onKeyDown={this.handleNumberToPack} /></p>
+
+        </div>
+      )
+    } else {
+      return (
+        <div>page changed</div>
+      )
+    }
   }
 }
 
