@@ -223,13 +223,8 @@ class App extends Component {
       }
       const itemLimit = this.limitPacking(itemToChange)
       const changeToMake = itemLimit < userChoice ? itemLimit : userChoice
-      const userSuccess = itemLimit < userChoice
+      const userSuccess = itemLimit >= userChoice
       message = this.packChangeRepresentation(userSuccess, changeToMake, itemToChange)
-      // if (itemLimit < userChoice) {
-      //   message = 'limited'
-      // } else {
-      //   message = '{userChoice} {itemToChange} added to your pack'
-      // }
       changeRepresentation = message
       changingInventory[itemToChange] = changeToMake
       const pageChange = Object.assign({}, this.state.game)
