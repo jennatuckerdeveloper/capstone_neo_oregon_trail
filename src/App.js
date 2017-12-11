@@ -3,11 +3,7 @@ import './App.css'
 import PlayMenu from './PlayMenu'
 import Naming from './Naming'
 import Pack from './Pack'
-import PackItem from './PackItem'
 import DifficultyPage from './DifficultyPage'
-
-// finish handleNumberToPack
-// figure out if there will be a PackItem component (probably)
 
 const DIFFICULTY = 'difficulty'
 const PACKING = 'packing'
@@ -80,8 +76,8 @@ class App extends Component {
     super(props)
     this.state = {
       game: {
-        gameState: PACKING,
-        difficulty: 1
+        gameState: DIFFICULTY,
+        difficulty: 'notSet'
       },
       progress: {
         days: 12,
@@ -177,7 +173,9 @@ class App extends Component {
 
   onConfirmNames (e) {
     if (e.target.value.toLowerCase() === Y) {
-      this.setState({game: {gameState: PACKING}})
+      const gameObject = Object.assign({}, this.state.game)
+      gameObject['gameState'] = PACKING
+      this.setState({game: gameObject})
     }
   }
 
@@ -214,7 +212,7 @@ class App extends Component {
     let itemToChange
     let message
     if (e.keyCode === RETURN || e.keyCode === SPACEBAR) {
-      const userChoice = e.target.value
+      const userChoice = parseInt(e.target.value, 10)
       const changingInventory = this.state.inventory
       for (let item in changingInventory) {
         if (changingInventory[item] === CHANGING) {
@@ -258,7 +256,9 @@ class App extends Component {
         const gameObject = Object.assign({}, this.state.game)
         gameObject['difficulty'] = userChoice
         gameObject['gameState'] = NAMING
-        this.setState({game: gameObject})
+        this.setState({
+          game: gameObject
+        })
       }
     }
   }
@@ -286,7 +286,7 @@ class App extends Component {
             confirmPacking={this.confirmPacking}
 
           />
-          <p>{changeRepresentation}</p>
+          <p id='packMessage'>{changeRepresentation}</p>
         </div>
       )
     } else if (this.state.game.gameState === PLAYING) {
