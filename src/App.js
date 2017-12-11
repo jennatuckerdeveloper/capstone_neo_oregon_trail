@@ -36,12 +36,42 @@ const packingMenu = ['waterFilter', 'solarPanel', 'gps', 'tent', 'sleepingBag', 
 const itemRepresentation = [
   'water filters',
   'solar panels',
-  'gps device',
+  'gps devices',
   'tents',
   'sleeping bags',
   'sets of clothes',
   'pounds of food'
 ]
+
+const difficultyLevels = {
+  1: {
+    waterFilter: 4,
+    solarPanel: 4,
+    gps: 2,
+    tent: 4,
+    sleepingBag: 10,
+    clothing: 10,
+    food: 1000
+  },
+  2: {
+    waterFilter: 4,
+    solarPanel: 4,
+    gps: 2,
+    tent: 4,
+    sleepingBag: 10,
+    clothing: 10,
+    food: 1000
+  },
+  3: {
+    waterFilter: 4,
+    solarPanel: 4,
+    gps: 2,
+    tent: 4,
+    sleepingBag: 10,
+    clothing: 10,
+    food: 1000
+  }
+}
 
 class App extends Component {
   constructor (props) {
@@ -49,7 +79,7 @@ class App extends Component {
     this.state = {
       game: {
         gameState: PACKING,
-        difficulty: 'notSet'
+        difficulty: 1
       },
       progress: {
         days: 12,
@@ -172,10 +202,27 @@ class App extends Component {
     }
   }
 
+  limitPacking (inventoryItem) {
+    const difficultyLevel = this.state.game.difficulty
+    const itemLimit = difficultyLevels[difficultyLevel][inventoryItem]
+    return itemLimit
+  }
+
   handleNumberToPack (e) {
+    let itemToChange
     if (e.keyCode === RETURN || e.keyCode === SPACEBAR) {
       const userChoice = e.target.value
-      console.log(userChoice)
+      const changingInventory = this.state.inventory
+      for (let item in changingInventory) {
+        if (changingInventory[item] === CHANGING) {
+          itemToChange = item
+        }
+      }
+      const itemLimit = this.limitPacking(itemToChange)
+      const changeToMake = itemLimit < userChoice ? itemLimit : userChoice
+      changingInventory[itemToChange] = changeToMake
+      this.setState({inventory: changingInventory})
+      console.log(this.state.inventory)
     }
   }
 
