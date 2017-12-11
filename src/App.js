@@ -25,6 +25,8 @@ const FAIR = 'fair'
 const POOR = 'poor'
 const Y = 'y'
 
+let changeRepresentation
+
 const rangeGenerator = function (lowest, highest) {
   const min = Math.ceil(lowest)
   const max = Math.floor(highest)
@@ -197,7 +199,7 @@ class App extends Component {
   itemChanging (inventoryObject) {
     for (let item in inventoryObject) {
       if (inventoryObject[item] === CHANGING) {
-        return itemRepresentation[packingMenu.indexOf(item)]
+        return 'How many ' + itemRepresentation[packingMenu.indexOf(item)] + ' do you want to pack?'
       }
     }
   }
@@ -210,6 +212,7 @@ class App extends Component {
 
   handleNumberToPack (e) {
     let itemToChange
+    let message
     if (e.keyCode === RETURN || e.keyCode === SPACEBAR) {
       const userChoice = e.target.value
       const changingInventory = this.state.inventory
@@ -220,9 +223,28 @@ class App extends Component {
       }
       const itemLimit = this.limitPacking(itemToChange)
       const changeToMake = itemLimit < userChoice ? itemLimit : userChoice
+      const userSuccess = itemLimit < userChoice
+      message = this.packChangeRepresentation(userSuccess, changeToMake, itemToChange)
+      // if (itemLimit < userChoice) {
+      //   message = 'limited'
+      // } else {
+      //   message = '{userChoice} {itemToChange} added to your pack'
+      // }
+      changeRepresentation = message
       changingInventory[itemToChange] = changeToMake
-      this.setState({inventory: changingInventory})
-      console.log(this.state.inventory)
+      const pageChange = Object.assign({}, this.state.game)
+      pageChange['gameState'] = PACKING
+      this.setState({
+        game: pageChange,
+        inventory: changingInventory})
+    }
+  }
+  packChangeRepresentation (userSuccess, number, item) {
+    item = itemRepresentation[packingMenu.indexOf(item)]
+    if (userSuccess) {
+      return number + ' ' + item + ' added to your pack.'
+    } else {
+      return 'You can only carry ' + number + ' ' + item + '. ' + number + ' ' + item + ' packed.'
     }
   }
 
@@ -256,18 +278,21 @@ class App extends Component {
       )
     } else if (this.state.game.gameState === PACKING) {
       return (
-        <Pack
-          waterFilter={this.state.inventory.waterFilter}
-          solarPanel={this.state.inventory.solarPanel}
-          gps={this.state.inventory.gps}
-          tent={this.state.inventory.tent}
-          sleepingBag={this.state.inventory.sleepingBag}
-          clothing={this.state.inventory.clothing}
-          food={this.state.inventory.food}
-          onPackingChoice={this.onPackingChoice}
-          confirmPacking={this.confirmPacking}
+        <div>
+          <Pack
+            waterFilter={this.state.inventory.waterFilter}
+            solarPanel={this.state.inventory.solarPanel}
+            gps={this.state.inventory.gps}
+            tent={this.state.inventory.tent}
+            sleepingBag={this.state.inventory.sleepingBag}
+            clothing={this.state.inventory.clothing}
+            food={this.state.inventory.food}
+            onPackingChoice={this.onPackingChoice}
+            confirmPacking={this.confirmPacking}
 
-        />
+          />
+          <p>{changeRepresentation}</p>
+        </div>
       )
     } else if (this.state.game.gameState === PLAYING) {
       return (
@@ -288,8 +313,7 @@ class App extends Component {
     } else if (this.state.game.gameState === ITEM) {
       return (
         <div id='itemPack'>
-          <p>How many {this.itemChanging(this.state.inventory)} do you want to pack? <input id='numberToPack' onKeyDown={this.handleNumberToPack} /></p>
-
+          <p>{this.itemChanging(this.state.inventory)}<input id='numberToPack' onKeyDown={this.handleNumberToPack} /></p>
         </div>
       )
     } else {
