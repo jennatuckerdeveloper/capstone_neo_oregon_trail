@@ -23,10 +23,23 @@ describe('integration testing', () => {
     enterDifficulty.simulate('keyDown', mockDifficutlyEntry)
   }
 
-  const toPlaying = function () {
+  const toPacking = function () {
     const confirmation = app.find('#confirmNames')
     const mockOnConfirmEvent = {target: {value: 'y'}}
     confirmation.simulate('keyDown', mockOnConfirmEvent)
+  }
+
+  const toItemPack = function () {
+    const packChoice = app.find('#packingInput')
+    const userChoice = 3
+    const mockOnChoice = {target: {value: userChoice}, keyCode: 13}
+    packChoice.simulate('keyDown', mockOnChoice)
+  }
+
+  const toPlaying = function () {
+    const finishedPacking = app.find('#finishedPacking')
+    const mockOnConfirmPack = {keyCode: 13}
+    finishedPacking.simulate('keyDown', mockOnConfirmPack)
   }
 
   it('loads a DifficultyPage component when the state game gameState is "difficulty', () => {
@@ -42,7 +55,7 @@ describe('integration testing', () => {
     expect(difficultyGameState).toBe(3)
   })
 
-  it('loads a Naming component when the state game gameState is "naming', () => {
+  it('loads a Naming component when the state game gameState is changed to "naming', () => {
     toNaming()
     const nameComponent = app.find('Naming').length
     expect(nameComponent).toBe(1)
@@ -63,17 +76,88 @@ describe('integration testing', () => {
     expect(names.slice(1)).toEqual(testNames)
   })
 
-  it('changes the game state from "naming" to "playing" when the user confirms with "y" and presses enter', () => {
+  it('changes the game state from "naming" to "packing" when the user confirms with "y" and presses enter', () => {
     toNaming()
     const confirmation = app.find('#confirmNames')
     const mockOnConfirmEvent = {target: {value: 'y'}}
     confirmation.simulate('keyDown', mockOnConfirmEvent)
     const appGameState = app.state().game.gameState
-    expect(appGameState).toBe('playing')
+    expect(appGameState).toBe('packing')
   })
 
-  it('changes the page from naming to playing when the game state changes', () => {
+  it('changes the state game gameState to "packItem" when the user choose an item to pack from the menu,', () => {
     toNaming()
+    toPacking()
+    const packChoice = app.find('#packingInput')
+    const mockOnChoice = {target: {value: '1'}, keyCode: 13}
+    packChoice.simulate('keyDown', mockOnChoice)
+    const gameState = app.state().game.gameState
+    expect(gameState).toBe('packItem')
+  })
+
+  it('changes the game state inventory value of the item chosen to pack from the menu to "changing"', () => {
+    toNaming()
+    toPacking()
+    const packChoice = app.find('#packingInput')
+    const userChoice = 3
+    const mockOnChoice = {target: {value: userChoice}, keyCode: 13}
+    packChoice.simulate('keyDown', mockOnChoice)
+    const itemChanging = app.state().inventory
+    const packingMenu = ['waterFilter', 'solarPanel', 'gps', 'tent', 'sleepingBag', 'clothing', 'food']
+    const itemChosen = packingMenu[userChoice - 1]
+    const stateChange = itemChanging[itemChosen]
+    expect(stateChange).toBe('changing')
+  })
+
+  it('changes the number of items in the inventory to input when the user chooses the number to add below max and presses enter', () => {
+    toNaming() // simulates a difficutly of 1
+    toPacking()
+    toItemPack() // simulates adding gps
+    // the max for gps for difficulty 1 is 2
+    const inventory = app.state().inventory
+    let itemChanging
+    for (let i in inventory) {
+      if (inventory[i] === 'changing') {
+        itemChanging = i
+      }
+    }
+    const numberToPackInput = app.find('#numberToPack')
+    const mockNumberToPackEntry = {target: {value: '1'}, keyCode: 13}
+    numberToPackInput.simulate('keyDown', mockNumberToPackEntry)
+    expect(inventory[itemChanging]).toBe(1)
+  })
+
+  it('generates a result message when user changes inventory', () => {
+    toNaming()
+    toPacking()
+    toItemPack()
+    const numberToPackInput = app.find('#numberToPack')
+    const mockNumberToPackEntry = {target: {value: '1'}, keyCode: 13}
+    numberToPackInput.simulate('keyDown', mockNumberToPackEntry)
+    const packMessage = app.find('#packMessage').text()
+    expect(packMessage).toBe('1 gps devices added to your pack.')
+  })
+
+  it('changes the number of items in the inventory to the max when the user chooses to add a number over the max and presses enter', () => {
+    toNaming()
+    toPacking()
+    toItemPack()
+    const inventory = app.state().inventory
+    let itemChanging
+    for (let i in inventory) {
+      if (inventory[i] === 'changing') {
+        itemChanging = i
+      }
+    }
+    const numberToPackInput = app.find('#numberToPack')
+    const mockNumberToPackEntry = {target: {value: '4'}, keyCode: 13}
+    numberToPackInput.simulate('keyDown', mockNumberToPackEntry)
+    expect(inventory[itemChanging]).toBe(2)
+  })
+
+  it('changes the page by loading a PlayMenu compontent when the game state changes to "playing"', () => {
+    toNaming()
+    toPacking()
     toPlaying()
     const findPlayMenu = app.find('PlayMenu').length
     expect(findPlayMenu).toBe(1)
@@ -81,6 +165,7 @@ describe('integration testing', () => {
 
   it('shows a word representation of a numerical health score for person named "you" on the game menu', () => {
     toNaming()
+    toPacking()
     toPlaying()
     const healthRepresentation = app.find('#health').text()
     const bool = (
@@ -93,6 +178,7 @@ describe('integration testing', () => {
 
   it('adds a day to the days on the trail when user plays 1. Walk On', () => {
     toNaming()
+    toPacking()
     toPlaying()
     const beginningDays = app.state().progress.days
     const playInput = app.find('#play')
@@ -104,6 +190,7 @@ describe('integration testing', () => {
 
   it('adds miles to the miles when user plays 1. Walk On', () => {
     toNaming()
+    toPacking()
     toPlaying()
     const beginningMiles = app.state().progress.miles
     const playInput = app.find('#play')
@@ -114,6 +201,7 @@ describe('integration testing', () => {
   })
   it('decrements food when user plays 1. Walk On', () => {
     toNaming()
+    toPacking()
     toPlaying()
     const beginningFood = app.state().inventory.food
     const playInput = app.find('#play')
@@ -125,6 +213,7 @@ describe('integration testing', () => {
 
   it('decrements the health of people with status "alive" when user plays 1. Walk On', () => {
     toNaming()
+    toPacking()
     toPlaying()
     const peopleLiving = app.state().people.filter((person) => person.status === 'alive')
     const beginningHealth = peopleLiving.map((person) => person.health)
