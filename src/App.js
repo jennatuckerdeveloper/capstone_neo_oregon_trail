@@ -22,6 +22,7 @@ const POOR = 'poor'
 const Y = 'y'
 
 let changeRepresentation
+let gameMessage = 'a game message'
 
 const rangeGenerator = function (lowest, highest) {
   const min = Math.ceil(lowest)
@@ -58,7 +59,7 @@ const difficultyLevels = {
     tent: 4,
     sleepingBag: 10,
     clothing: 10,
-    food: 1000
+    food: 800
   },
   3: {
     waterFilter: 4,
@@ -67,7 +68,7 @@ const difficultyLevels = {
     tent: 4,
     sleepingBag: 10,
     clothing: 10,
-    food: 1000
+    food: 600
   }
 }
 
@@ -97,21 +98,21 @@ class App extends Component {
         health: 100,
         status: ALIVE
       }, {
-        name: '',
+        name: 'Two',
         health: 100,
         status: DEAD
       }, {
-        name: '',
+        name: 'Three',
         health: 100,
         status: ALIVE
       },
       {
-        name: '',
+        name: 'Four',
         health: 100,
         status: ALIVE
       },
       {
-        name: '',
+        name: 'Five',
         health: 100,
         status: ALIVE
       }
@@ -132,12 +133,13 @@ class App extends Component {
     let newDays = this.state.progress.days
     newDays += 1
     const peopleList = this.state.people
-    const peopleLiving = peopleList.filter((character) => character.status !== DEAD).length
-    const foodLost = rangeGenerator(2 * peopleLiving, 5 * peopleLiving)
+    const peopleLiving = peopleList.filter((character) => character.status !== DEAD)
+    console.log(peopleLiving)
+    const foodPortions = peopleLiving.length
+    const foodLost = rangeGenerator(2 * foodPortions, 5 * foodPortions)
     let newFood = this.state.inventory.food
     newFood -= foodLost
-    const lostHealth = this.state.inventory.food > 0 ? 5 : 20
-    const newPeopleList = this.state.people.map(function (character) { character.health -= lostHealth; return character })
+    const newPeopleList = this.peopleLoseHealth(peopleLiving)
     this.setState({
       progress: {miles: newMiles, days: newDays},
       inventory: {food: newFood},
@@ -145,12 +147,29 @@ class App extends Component {
     })
   }
 
+  peopleLoseHealth (peopleLiving) {
+    const lostHealth = this.state.inventory.food > 0 ? 5 : 20
+    const peopleList = peopleLiving.map(function (character) { character.health -= lostHealth; return character })
+    const anyoneDead = peopleList.filter((person) => person.health <= 0).pop()
+    anyoneDead.status = DEAD
+    let peopleInventory = this.state.people.map((person) => Object.assign({}, person))
+    const personToChange = peopleInventory.indexOf(anyoneDead)
+    peopleInventory[personToChange] = anyoneDead
+    console.log(peopleInventory)
+    // return newPeopleList
+  }
+
+  makeGameMessage () {
+    gameMessage = 'new game message'
+  }
+
   onUserPlay (e) {
+    gameMessage = ''
     if (e.keyCode === RETURN || e.keyCode === SPACEBAR) {
       if (e.target.value === '1') {
         this.walk()
       }
-    }
+    } this.makeGameMessage()
   }
 
   healthRepresentation (healthScore) {
@@ -232,6 +251,7 @@ class App extends Component {
         inventory: changingInventory})
     }
   }
+
   packChangeRepresentation (userSuccess, number, item) {
     item = itemRepresentation[packingMenu.indexOf(item)]
     if (userSuccess) {
@@ -291,13 +311,16 @@ class App extends Component {
       )
     } else if (this.state.game.gameState === PLAYING) {
       return (
-        <PlayMenu
-          days={this.state.progress.days}
-          miles={this.state.progress.miles}
-          food={this.state.inventory.food}
-          health={this.healthRepresentation(this.state.people[0])}
-          onUserPlay={this.onUserPlay}
-        />
+        <div>
+          <PlayMenu
+            days={this.state.progress.days}
+            miles={this.state.progress.miles}
+            food={this.state.inventory.food}
+            health={this.healthRepresentation(this.state.people[0])}
+            onUserPlay={this.onUserPlay}
+          />
+          <p>{gameMessage}</p>
+        </div>
       )
     } else if (this.state.game.gameState === DIFFICULTY) {
       return (

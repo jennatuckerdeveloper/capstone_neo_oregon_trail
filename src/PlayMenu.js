@@ -10,7 +10,7 @@ export default class PlayMenu extends Component {
           <p>Food: {this.props.food}</p>
           <p id='health'>Health: {this.props.health}</p>
         </div>
-        <div id='gameMessage'> x </div>
+        <div id='gameMessage'>{this.props.gameMessage}</div>
         <div id='gameMenu' >
           <p>What do you want to do?</p>
           <p>1. Walk on.</p>
