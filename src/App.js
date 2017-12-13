@@ -8,12 +8,12 @@ import DifficultyPage from './DifficultyPage'
 import GameOver from './GameOver'
 
 const DIFFICULTY = 'difficulty'
+const NAMING = 'naming'
 const PACKING = 'packing'
 const ITEM = 'packItem'
-const NAMING = 'naming'
 const PLAYING = 'playing'
-const CHANGING = 'changing'
 const GAMEOVER = 'gameover'
+const CHANGING = 'changing'
 const YOU = 'You'
 const DEAD = 'dead'
 const ALIVE = 'alive'
@@ -84,7 +84,7 @@ class App extends Component {
     super(props)
     this.state = {
       game: {
-        gameState: PLAYING,
+        gameState: DIFFICULTY,
         difficulty: 'notSet'
       },
       progress: {
@@ -145,9 +145,12 @@ class App extends Component {
     const foodPortions = peopleLiving.length
     const foodLost = rangeGenerator(2 * foodPortions, 5 * foodPortions)
     let newFood = this.state.inventory.food
-    newFood -= foodLost
-    if (newFood <= 0 && newFood >= -25) {
+    if (this.state.inventory.food > 0) {
+      newFood -= foodLost
+    }
+    if (newFood <= 0) {
       gameMessage = 'You have run out of food'
+      newFood = 'no food'
     }
     this.setState({
       progress: {miles: newMiles, days: newDays},
@@ -187,9 +190,9 @@ class App extends Component {
   }
 
   healthRepresentation (healthScore) {
-    if (healthScore <= 100 && healthScore >= 85) {
+    if (healthScore <= 100 && healthScore >= 80) {
       return GOOD
-    } else if (healthScore < 85 && healthScore >= 65) {
+    } else if (healthScore < 80 && healthScore >= 60) {
       return FAIR
     } else {
       return POOR
@@ -299,7 +302,7 @@ class App extends Component {
       return (
         <Naming
           handleName={this.handleName}
-          onConfirm={this.onConfirmNames}
+          onConfirmNames={this.onConfirmNames}
         />
       )
     } else if (this.state.game.gameState === PACKING) {

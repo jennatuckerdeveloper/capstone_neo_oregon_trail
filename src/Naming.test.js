@@ -13,14 +13,14 @@ Enzyme.configure({ adapter: new Adapter() })
 
 describe('integration testing', () => {
   let handleNameTriggered = 0
-  let onConfirmTriggered = false
+  let onConfirmNamesTriggered = false
   let wrapper
 
   beforeEach(() => {
     wrapper = shallow(
       <Naming
         handleName={() => { handleNameTriggered += 1 }}
-        onConfirm={() => { onConfirmTriggered = true }}
+        onConfirmNames={() => { onConfirmNamesTriggered = true }}
       />
     )
   })
@@ -35,6 +35,6 @@ describe('integration testing', () => {
   it('triggers the confirm when user enters something into confirmName input field', () => {
     const confirmationInput = wrapper.find('#confirmNames')
     confirmationInput.simulate('keyDown')
-    expect(onConfirmTriggered).toBe(true)
+    expect(onConfirmNamesTriggered).toBe(true)
   })
 })
