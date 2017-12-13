@@ -149,7 +149,7 @@ class App extends Component {
       newFood -= foodLost
     }
     if (newFood <= 0) {
-      gameMessage = 'You have run out of food'
+      gameMessage = 'You have run out of food.'
       newFood = 'no food'
     }
     this.setState({
@@ -323,16 +323,14 @@ class App extends Component {
       )
     } else if (this.state.game.gameState === PLAYING) {
       return (
-        <div>
-          <PlayMenu
-            days={this.state.progress.days}
-            miles={this.state.progress.miles}
-            food={this.state.inventory.food}
-            health={this.healthRepresentation(this.state.people[0].health)}
-            onUserPlay={this.onUserPlay}
-          />
-          <p>{gameMessage}</p>
-        </div>
+        <PlayMenu
+          days={this.state.progress.days}
+          miles={this.state.progress.miles}
+          food={this.state.inventory.food}
+          health={this.healthRepresentation(this.state.people[0].health)}
+          onUserPlay={this.onUserPlay}
+          gameMessage={gameMessage}
+        />
       )
     } else if (this.state.game.gameState === DIFFICULTY) {
       return (

@@ -1,4 +1,4 @@
-/* global describe beforeEach it expect xit */
+/* global describe beforeEach it expect */
 import React from 'react'
 /* eslint-disable no-unused-vars */
 import ReactDOM from 'react-dom'
@@ -40,6 +40,12 @@ describe('integration testing', () => {
     const finishedPacking = app.find('#finishedPacking')
     const mockOnConfirmPack = {keyCode: 13, target: {value: 'y'}}
     finishedPacking.simulate('keyDown', mockOnConfirmPack)
+  }
+
+  const onPlay = function () {
+    const mockPlayEvent = {target: {value: '1'}, keyCode: 13}
+    const playInput = app.find('#play')
+    playInput.simulate('keyDown', mockPlayEvent)
   }
 
   it('loads a DifficultyPage component when the state game gameState is "difficulty', () => {
@@ -227,5 +233,77 @@ describe('integration testing', () => {
     beginningHealth.forEach((healthScore, index) => {
       expect(healthScore > afterPlayHealth[index]).toBe(true)
     })
+  })
+
+  it('presents a game message when the player runs out of food', () => {
+    toNaming()
+    toPacking()
+    toPlaying()
+    const mockPlayEvent = {target: {value: '1'}, keyCode: 13}
+    const playInput = app.find('#play')
+    playInput.simulate('keyDown', mockPlayEvent)
+    const gameMessage = app.find('#gameMessage').text()
+    expect(gameMessage).toBe('You have run out of food.')
+  })
+
+  it('changes the status of one person to "dead" when any number of health scores reaches 0 or less', () => {
+    toNaming()
+    toPacking()
+    toPlaying()
+    onPlay()
+    onPlay()
+    onPlay()
+    onPlay()
+    onPlay()
+    const people = app.state().people
+    const statusDead = people.filter((personObject) => personObject.status === 'dead')
+    expect(statusDead.length).toBe(1)
+  })
+
+  it('presents a game message when the status of a character changes to dead', () => {
+    toNaming()
+    toPacking()
+    toPlaying()
+    onPlay()
+    onPlay()
+    onPlay()
+    onPlay()
+    onPlay()
+    const gameMessage = app.find('#gameMessage').text()
+    expect(gameMessage.length > 0).toBe(true)
+  })
+
+  it('changes the state game gameState to "gameover" when the "You" character has a status of "dead"', () => {
+    toNaming()
+    toPacking()
+    toPlaying()
+    onPlay()
+    onPlay()
+    onPlay()
+    onPlay()
+    onPlay()
+    onPlay()
+    onPlay()
+    onPlay()
+    onPlay()
+    const gameMessage = app.find('#gameMessage').text()
+    expect(gameMessage).toBe('You have died of starvation and exhaustion.')
+  })
+
+  it('changes the state game gameState to "gameover" when the "You" character has a status of "dead"', () => {
+    toNaming()
+    toPacking()
+    toPlaying()
+    onPlay()
+    onPlay()
+    onPlay()
+    onPlay()
+    onPlay()
+    onPlay()
+    onPlay()
+    onPlay()
+    onPlay()
+    const gameOverComponent = app.find('GameOver')
+    expect(gameOverComponent.length).toBe(1)
   })
 })
