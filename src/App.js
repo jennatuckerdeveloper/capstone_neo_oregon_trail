@@ -27,7 +27,7 @@ const Y = 'y'
 let changeRepresentation
 let gameMessage
 
-const rangeGenerator = function (lowest, highest) {
+const randomGenerator = function (lowest, highest) {
   const min = Math.ceil(lowest)
   const max = Math.floor(highest)
   return Math.floor(Math.random() * (max - min)) + min
@@ -88,8 +88,8 @@ class App extends Component {
         difficulty: 'notSet'
       },
       progress: {
-        days: 12,
-        miles: 123
+        days: 0,
+        miles: 0
       },
       inventory: {
         waterFilter: 0,
@@ -134,16 +134,16 @@ class App extends Component {
   }
 
   walk () {
-    const milesGained = rangeGenerator(12, 25)
+    const milesGained = randomGenerator(12, 25)
     let newMiles = this.state.progress.miles
     newMiles += milesGained
     let newDays = this.state.progress.days
     newDays += 1
     const peopleList = this.state.people.map((person) => Object.assign({}, person))
     const peopleLiving = peopleList.filter((character) => character.status !== DEAD)
-    const newPeopleList = this.peopleLoseHealth(peopleLiving)
+    let newPeopleList = this.peopleLoseHealth(peopleLiving)
     const foodPortions = peopleLiving.length
-    const foodLost = rangeGenerator(2 * foodPortions, 5 * foodPortions)
+    const foodLost = randomGenerator(2 * foodPortions, 5 * foodPortions)
     let newFood = this.state.inventory.food
     if (this.state.inventory.food > 0) {
       newFood -= foodLost
@@ -151,6 +151,10 @@ class App extends Component {
     if (newFood <= 0) {
       gameMessage = 'You have run out of food.'
       newFood = 'no food'
+    }
+    if (gameMessage.length === 0) {
+      const badLuck = randomGenerator(1, 6) === 3
+      newPeopleList = this.randomCharacterDeath(newPeopleList, badLuck)
     }
     this.setState({
       progress: {miles: newMiles, days: newDays},
@@ -175,6 +179,34 @@ class App extends Component {
       gameMessage = message
       if (deadPersonName === YOU) {
         this.setState({game: {gameState: GAMEOVER}})
+      }
+    }
+    return peopleList
+  }
+
+  randomCharacterDeath (peopleList, badLuck) {
+    if (badLuck === false) {
+      return peopleList
+    }
+    const depressedCharacter = peopleList.find((person) => person.status === 'depressed')
+    if (depressedCharacter === undefined) {
+      const randomPersonName = peopleList[Math.floor(Math.random() * peopleList.length)].name
+      const randomPersonObject = peopleList.find((person) => person.name === randomPersonName)
+      const randomPersonPosition = peopleList.indexOf(randomPersonObject)
+      peopleList[randomPersonPosition].status = 'depressed'
+      const message = randomPersonName === 'You' ? `${randomPersonName} are depressed.` : `${randomPersonName} is depressed.`
+      gameMessage = message
+    } else {
+      const luck = randomGenerator(1, 4)
+      const depressedCharacterPosition = peopleList.indexOf(depressedCharacter)
+      if (luck === 1) {
+        peopleList[depressedCharacterPosition].status = ALIVE
+      } else if (luck === 2) {
+        peopleList[depressedCharacterPosition].status = DEAD
+        const message = peopleList[depressedCharacterPosition].name === 'You'
+          ? `${peopleList[depressedCharacterPosition].name} have died of melancholy.`
+          : `${peopleList[depressedCharacterPosition].name} has died of melancholy.`
+        gameMessage = message
       }
     }
     return peopleList
