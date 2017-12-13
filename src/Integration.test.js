@@ -115,12 +115,7 @@ describe('integration testing', () => {
     toItemPack() // simulates adding gps
     // the max for gps for difficulty 1 is 2
     const inventory = app.state().inventory
-    let itemChanging
-    for (let i in inventory) {
-      if (inventory[i] === 'changing') {
-        itemChanging = i
-      }
-    }
+    let itemChanging = Object.keys(inventory).find((key) => inventory[key] === 'changing')
     const numberToPackInput = app.find('#numberToPack')
     const mockNumberToPackEntry = {target: {value: '1'}, keyCode: 13}
     numberToPackInput.simulate('keyDown', mockNumberToPackEntry)
@@ -143,12 +138,7 @@ describe('integration testing', () => {
     toPacking()
     toItemPack()
     const inventory = app.state().inventory
-    let itemChanging
-    for (let i in inventory) {
-      if (inventory[i] === 'changing') {
-        itemChanging = i
-      }
-    }
+    let itemChanging = Object.keys(inventory).find((key) => inventory[key] === 'changing')
     const numberToPackInput = app.find('#numberToPack')
     const mockNumberToPackEntry = {target: {value: '4'}, keyCode: 13}
     numberToPackInput.simulate('keyDown', mockNumberToPackEntry)
