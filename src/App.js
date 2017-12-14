@@ -3,13 +3,16 @@ import './App.css'
 import PlayMenu from './PlayMenu'
 import Naming from './Naming'
 import Pack from './Pack'
+import ItemPack from './ItemPack'
 import DifficultyPage from './DifficultyPage'
+import GameOver from './GameOver'
 
 const DIFFICULTY = 'difficulty'
+const NAMING = 'naming'
 const PACKING = 'packing'
 const ITEM = 'packItem'
-const NAMING = 'naming'
 const PLAYING = 'playing'
+const GAMEOVER = 'gameover'
 const CHANGING = 'changing'
 const YOU = 'You'
 const DEAD = 'dead'
@@ -22,11 +25,16 @@ const POOR = 'poor'
 const Y = 'y'
 
 let changeRepresentation
+let gameMessage
 
 const rangeGenerator = function (lowest, highest) {
   const min = Math.ceil(lowest)
   const max = Math.floor(highest)
   return Math.floor(Math.random() * (max - min)) + min
+}
+
+const checkForSpecialCharacter = function (e) {
+  return [RETURN, SPACEBAR].includes(e.keyCode)
 }
 
 const packingMenu = ['waterFilter', 'solarPanel', 'gps', 'tent', 'sleepingBag', 'clothing', 'food']
@@ -58,7 +66,7 @@ const difficultyLevels = {
     tent: 4,
     sleepingBag: 10,
     clothing: 10,
-    food: 1000
+    food: 800
   },
   3: {
     waterFilter: 4,
@@ -67,7 +75,7 @@ const difficultyLevels = {
     tent: 4,
     sleepingBag: 10,
     clothing: 10,
-    food: 1000
+    food: 600
   }
 }
 
@@ -97,21 +105,21 @@ class App extends Component {
         health: 100,
         status: ALIVE
       }, {
-        name: '',
+        name: 'Two',
         health: 100,
-        status: DEAD
+        status: ALIVE
       }, {
-        name: '',
+        name: 'Three',
         health: 100,
         status: ALIVE
       },
       {
-        name: '',
+        name: 'Four',
         health: 100,
         status: ALIVE
       },
       {
-        name: '',
+        name: 'Five',
         health: 100,
         status: ALIVE
       }
@@ -131,13 +139,19 @@ class App extends Component {
     newMiles += milesGained
     let newDays = this.state.progress.days
     newDays += 1
-    const peopleList = this.state.people
-    const peopleLiving = peopleList.filter((character) => character.status !== DEAD).length
-    const foodLost = rangeGenerator(2 * peopleLiving, 5 * peopleLiving)
+    const peopleList = this.state.people.map((person) => Object.assign({}, person))
+    const peopleLiving = peopleList.filter((character) => character.status !== DEAD)
+    const newPeopleList = this.peopleLoseHealth(peopleLiving)
+    const foodPortions = peopleLiving.length
+    const foodLost = rangeGenerator(2 * foodPortions, 5 * foodPortions)
     let newFood = this.state.inventory.food
-    newFood -= foodLost
-    const lostHealth = this.state.inventory.food > 0 ? 5 : 20
-    const newPeopleList = this.state.people.map(function (character) { character.health -= lostHealth; return character })
+    if (this.state.inventory.food > 0) {
+      newFood -= foodLost
+    }
+    if (newFood <= 0) {
+      gameMessage = 'You have run out of food.'
+      newFood = 'no food'
+    }
     this.setState({
       progress: {miles: newMiles, days: newDays},
       inventory: {food: newFood},
@@ -145,8 +159,30 @@ class App extends Component {
     })
   }
 
+  peopleLoseHealth (peopleLiving) {
+    const lostHealth = this.state.inventory.food > 0 ? 5 : 20
+    const peopleList = peopleLiving.map(function (character) { character.health -= lostHealth; return character })
+    const anyoneDead = peopleList.filter((person) => person.health <= 0)
+    if (anyoneDead.length > 0) {
+      const toChange = anyoneDead.pop()
+      const personToChange = peopleList.indexOf(toChange)
+      peopleList[personToChange].status = DEAD
+      peopleList[personToChange].health = 0
+      const deadPersonName = toChange.name
+      const message = deadPersonName === 'You'
+        ? `${deadPersonName} have died of starvation and exhaustion.`
+        : `${deadPersonName} has died of starvation and exhaustion.`
+      gameMessage = message
+      if (deadPersonName === YOU) {
+        this.setState({game: {gameState: GAMEOVER}})
+      }
+    }
+    return peopleList
+  }
+
   onUserPlay (e) {
-    if (e.keyCode === RETURN || e.keyCode === SPACEBAR) {
+    gameMessage = ''
+    if (checkForSpecialCharacter(e)) {
       if (e.target.value === '1') {
         this.walk()
       }
@@ -154,9 +190,9 @@ class App extends Component {
   }
 
   healthRepresentation (healthScore) {
-    if (healthScore <= 100 && healthScore >= 85) {
+    if (healthScore <= 100 && healthScore >= 80) {
       return GOOD
-    } else if (healthScore < 85 && healthScore >= 65) {
+    } else if (healthScore < 80 && healthScore >= 60) {
       return FAIR
     } else {
       return POOR
@@ -172,7 +208,7 @@ class App extends Component {
   }
 
   onConfirmNames (e) {
-    if (e.target.value.toLowerCase() === Y) {
+    if (checkForSpecialCharacter(e) && e.target.value.toLowerCase() === Y) {
       const gameObject = Object.assign({}, this.state.game)
       gameObject['gameState'] = PACKING
       this.setState({game: gameObject})
@@ -181,7 +217,7 @@ class App extends Component {
 
   onPackingChoice (e) {
     const userChoice = parseInt(e.target.value, 10)
-    if ((e.keyCode === RETURN || e.keyCode === SPACEBAR) && [1, 2, 3, 4, 5, 6, 7].includes(userChoice)) {
+    if (checkForSpecialCharacter(e) && [1, 2, 3, 4, 5, 6, 7].includes(userChoice)) {
       const gameObject = Object.assign({}, this.state.game)
       gameObject['gameState'] = ITEM
       const inventoryChange = Object.assign({}, this.state.inventory)
@@ -194,10 +230,11 @@ class App extends Component {
     }
   }
 
-  itemChanging (inventoryObject) {
+  itemChanging () {
+    const inventoryObject = this.state.inventory
     for (let item in inventoryObject) {
       if (inventoryObject[item] === CHANGING) {
-        return 'How many ' + itemRepresentation[packingMenu.indexOf(item)] + ' do you want to pack?'
+        return `How many ${itemRepresentation[packingMenu.indexOf(item)]} do you want to pack?`
       }
     }
   }
@@ -211,14 +248,10 @@ class App extends Component {
   handleNumberToPack (e) {
     let itemToChange
     let message
-    if (e.keyCode === RETURN || e.keyCode === SPACEBAR) {
+    if (checkForSpecialCharacter(e)) {
       const userChoice = parseInt(e.target.value, 10)
       const changingInventory = this.state.inventory
-      for (let item in changingInventory) {
-        if (changingInventory[item] === CHANGING) {
-          itemToChange = item
-        }
-      }
+      itemToChange = Object.keys(changingInventory).find((key, index, array) => changingInventory[key] === CHANGING)
       const itemLimit = this.limitPacking(itemToChange)
       const changeToMake = itemLimit < userChoice ? itemLimit : userChoice
       const userSuccess = itemLimit >= userChoice
@@ -232,17 +265,18 @@ class App extends Component {
         inventory: changingInventory})
     }
   }
+
   packChangeRepresentation (userSuccess, number, item) {
     item = itemRepresentation[packingMenu.indexOf(item)]
     if (userSuccess) {
-      return number + ' ' + item + ' added to your pack.'
+      return `${number} ${item} added to your pack.`
     } else {
-      return 'You can only carry ' + number + ' ' + item + '. ' + number + ' ' + item + ' packed.'
+      return `You can only carry ${number} ${item}. ${number} + ${item} packed.`
     }
   }
 
   confirmPacking (e) {
-    if (e.keyCode === RETURN || e.keyCode === SPACEBAR) {
+    if (checkForSpecialCharacter(e) && e.target.value.toLowerCase() === Y) {
       const gameObject = Object.assign({}, this.state.game)
       gameObject['gameState'] = PLAYING
       this.setState({game: gameObject})
@@ -250,7 +284,7 @@ class App extends Component {
   }
 
   handleDifficulty (e) {
-    if (e.keyCode === RETURN || e.keyCode === SPACEBAR) {
+    if (checkForSpecialCharacter(e)) {
       const userChoice = parseInt(e.target.value, 10)
       if ([1, 2, 3].includes(userChoice)) {
         const gameObject = Object.assign({}, this.state.game)
@@ -268,26 +302,24 @@ class App extends Component {
       return (
         <Naming
           handleName={this.handleName}
-          onConfirm={this.onConfirmNames}
+          onConfirmNames={this.onConfirmNames}
         />
       )
     } else if (this.state.game.gameState === PACKING) {
       return (
-        <div>
-          <Pack
-            waterFilter={this.state.inventory.waterFilter}
-            solarPanel={this.state.inventory.solarPanel}
-            gps={this.state.inventory.gps}
-            tent={this.state.inventory.tent}
-            sleepingBag={this.state.inventory.sleepingBag}
-            clothing={this.state.inventory.clothing}
-            food={this.state.inventory.food}
-            onPackingChoice={this.onPackingChoice}
-            confirmPacking={this.confirmPacking}
+        <Pack
+          waterFilter={this.state.inventory.waterFilter}
+          solarPanel={this.state.inventory.solarPanel}
+          gps={this.state.inventory.gps}
+          tent={this.state.inventory.tent}
+          sleepingBag={this.state.inventory.sleepingBag}
+          clothing={this.state.inventory.clothing}
+          food={this.state.inventory.food}
+          onPackingChoice={this.onPackingChoice}
+          confirmPacking={this.confirmPacking}
+          gameMessage={changeRepresentation}
 
-          />
-          <p id='packMessage'>{changeRepresentation}</p>
-        </div>
+        />
       )
     } else if (this.state.game.gameState === PLAYING) {
       return (
@@ -295,8 +327,9 @@ class App extends Component {
           days={this.state.progress.days}
           miles={this.state.progress.miles}
           food={this.state.inventory.food}
-          health={this.healthRepresentation(this.state.people[0])}
+          health={this.healthRepresentation(this.state.people[0].health)}
           onUserPlay={this.onUserPlay}
+          gameMessage={gameMessage}
         />
       )
     } else if (this.state.game.gameState === DIFFICULTY) {
@@ -307,9 +340,19 @@ class App extends Component {
       )
     } else if (this.state.game.gameState === ITEM) {
       return (
-        <div id='itemPack'>
-          <p>{this.itemChanging(this.state.inventory)}<input id='numberToPack' onKeyDown={this.handleNumberToPack} /></p>
-        </div>
+        <ItemPack
+          itemChanging={this.itemChanging()}
+          handleNumberToPack={this.handleNumberToPack}
+        />
+      )
+    } else if (this.state.game.gameState === GAMEOVER) {
+      return (
+        <GameOver
+          days={this.state.progress.days}
+          miles={this.state.progress.miles}
+          food={this.state.inventory.food}
+          gameMessage={gameMessage}
+        />
       )
     } else {
       return (

@@ -16,6 +16,7 @@ export default class Pack extends Component {
         <p><span className='packItem'> 7. Food</span><span className='packed'>{this.props.food} pounds packed</span></p>
         <p>What do you want to pack?  <input id='packingInput' onKeyDown={this.props.onPackingChoice} maxLength='1' /></p>
         <p>Finished packing? <input id='finishedPacking' onKeyDown={this.props.confirmPacking} maxLength='1' /></p>
+        <p id='packMessage'>{this.props.gameMessage}</p>
       </div>
     )
   }

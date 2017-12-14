@@ -11,7 +11,7 @@ export default class Naming extends Component {
         <p>4. <input className='people' id='3teamMember' type='text' onChange={this.props.handleName} /></p>
         <p>5. <input className='people' id='4teamMember' type='text' onChange={this.props.handleName} /></p>
         <p>Are these names correct?</p>
-        <p><input id='confirmNames' type='text' maxLength='1' onKeyDown={this.props.onConfirm} /></p>
+        <p><input id='confirmNames' type='text' maxLength='1' onKeyDown={this.props.onConfirmNames} /></p>
       </div>
     )
   }

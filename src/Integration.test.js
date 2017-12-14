@@ -25,8 +25,8 @@ describe('integration testing', () => {
 
   const toPacking = function () {
     const confirmation = app.find('#confirmNames')
-    const mockOnConfirmEvent = {target: {value: 'y'}}
-    confirmation.simulate('keyDown', mockOnConfirmEvent)
+    const mockConfirmNamesEvent = {keyCode: 13, target: {value: 'y'}}
+    confirmation.simulate('keydown', mockConfirmNamesEvent)
   }
 
   const toItemPack = function () {
@@ -38,8 +38,14 @@ describe('integration testing', () => {
 
   const toPlaying = function () {
     const finishedPacking = app.find('#finishedPacking')
-    const mockOnConfirmPack = {keyCode: 13}
+    const mockOnConfirmPack = {keyCode: 13, target: {value: 'y'}}
     finishedPacking.simulate('keyDown', mockOnConfirmPack)
+  }
+
+  const onPlay = function () {
+    const mockPlayEvent = {target: {value: '1'}, keyCode: 13}
+    const playInput = app.find('#play')
+    playInput.simulate('keyDown', mockPlayEvent)
   }
 
   it('loads a DifficultyPage component when the state game gameState is "difficulty', () => {
@@ -79,7 +85,7 @@ describe('integration testing', () => {
   it('changes the game state from "naming" to "packing" when the user confirms with "y" and presses enter', () => {
     toNaming()
     const confirmation = app.find('#confirmNames')
-    const mockOnConfirmEvent = {target: {value: 'y'}}
+    const mockOnConfirmEvent = {keyCode: 13, target: {value: 'y'}}
     confirmation.simulate('keyDown', mockOnConfirmEvent)
     const appGameState = app.state().game.gameState
     expect(appGameState).toBe('packing')
@@ -115,12 +121,7 @@ describe('integration testing', () => {
     toItemPack() // simulates adding gps
     // the max for gps for difficulty 1 is 2
     const inventory = app.state().inventory
-    let itemChanging
-    for (let i in inventory) {
-      if (inventory[i] === 'changing') {
-        itemChanging = i
-      }
-    }
+    let itemChanging = Object.keys(inventory).find((key) => inventory[key] === 'changing')
     const numberToPackInput = app.find('#numberToPack')
     const mockNumberToPackEntry = {target: {value: '1'}, keyCode: 13}
     numberToPackInput.simulate('keyDown', mockNumberToPackEntry)
@@ -143,12 +144,7 @@ describe('integration testing', () => {
     toPacking()
     toItemPack()
     const inventory = app.state().inventory
-    let itemChanging
-    for (let i in inventory) {
-      if (inventory[i] === 'changing') {
-        itemChanging = i
-      }
-    }
+    let itemChanging = Object.keys(inventory).find((key) => inventory[key] === 'changing')
     const numberToPackInput = app.find('#numberToPack')
     const mockNumberToPackEntry = {target: {value: '4'}, keyCode: 13}
     numberToPackInput.simulate('keyDown', mockNumberToPackEntry)
@@ -202,13 +198,25 @@ describe('integration testing', () => {
   it('decrements food when user plays 1. Walk On', () => {
     toNaming()
     toPacking()
+    const packChoice = app.find('#packingInput')
+    const userChoice = 7
+    const mockOnChoice = {target: {value: userChoice}, keyCode: 13}
+    packChoice.simulate('keyDown', mockOnChoice)
+    const packingChoice = app.find('#numberToPack')
+    const poundsOfFood = 20
+    const mockPackingChoiceEvent = {keyCode: 13, target: {value: poundsOfFood}}
+    packingChoice.simulate('keyDown', mockPackingChoiceEvent)
     toPlaying()
     const beginningFood = app.state().inventory.food
     const playInput = app.find('#play')
     const mockPlayEvent = {target: {value: '1'}, keyCode: 13}
     playInput.simulate('keyDown', mockPlayEvent)
     const afterPlayFood = app.state().inventory.food
-    expect(afterPlayFood < beginningFood).toBe(true)
+    let bool = afterPlayFood < beginningFood
+    if (afterPlayFood === 'no food') {
+      bool = true
+    }
+    expect(bool).toBe(true)
   })
 
   it('decrements the health of people with status "alive" when user plays 1. Walk On', () => {
@@ -225,5 +233,77 @@ describe('integration testing', () => {
     beginningHealth.forEach((healthScore, index) => {
       expect(healthScore > afterPlayHealth[index]).toBe(true)
     })
+  })
+
+  it('presents a game message when the player runs out of food', () => {
+    toNaming()
+    toPacking()
+    toPlaying()
+    const mockPlayEvent = {target: {value: '1'}, keyCode: 13}
+    const playInput = app.find('#play')
+    playInput.simulate('keyDown', mockPlayEvent)
+    const gameMessage = app.find('#gameMessage').text()
+    expect(gameMessage).toBe('You have run out of food.')
+  })
+
+  it('changes the status of one person to "dead" when any number of health scores reaches 0 or less', () => {
+    toNaming()
+    toPacking()
+    toPlaying()
+    onPlay()
+    onPlay()
+    onPlay()
+    onPlay()
+    onPlay()
+    const people = app.state().people
+    const statusDead = people.filter((personObject) => personObject.status === 'dead')
+    expect(statusDead.length).toBe(1)
+  })
+
+  it('presents a game message when the status of a character changes to dead', () => {
+    toNaming()
+    toPacking()
+    toPlaying()
+    onPlay()
+    onPlay()
+    onPlay()
+    onPlay()
+    onPlay()
+    const gameMessage = app.find('#gameMessage').text()
+    expect(gameMessage.length > 0).toBe(true)
+  })
+
+  it('changes the state game gameState to "gameover" when the "You" character has a status of "dead"', () => {
+    toNaming()
+    toPacking()
+    toPlaying()
+    onPlay()
+    onPlay()
+    onPlay()
+    onPlay()
+    onPlay()
+    onPlay()
+    onPlay()
+    onPlay()
+    onPlay()
+    const gameMessage = app.find('#gameMessage').text()
+    expect(gameMessage).toBe('You have died of starvation and exhaustion.')
+  })
+
+  it('changes the state game gameState to "gameover" when the "You" character has a status of "dead"', () => {
+    toNaming()
+    toPacking()
+    toPlaying()
+    onPlay()
+    onPlay()
+    onPlay()
+    onPlay()
+    onPlay()
+    onPlay()
+    onPlay()
+    onPlay()
+    onPlay()
+    const gameOverComponent = app.find('GameOver')
+    expect(gameOverComponent.length).toBe(1)
   })
 })
