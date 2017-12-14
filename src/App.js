@@ -6,6 +6,10 @@ import Pack from './Pack'
 import ItemPack from './ItemPack'
 import DifficultyPage from './DifficultyPage'
 import GameOver from './GameOver'
+import Win from './Win'
+
+// write tests for random character death
+// can I import the function and test it? or do I have a testing problem because it's random?
 
 const DIFFICULTY = 'difficulty'
 const NAMING = 'naming'
@@ -13,6 +17,7 @@ const PACKING = 'packing'
 const ITEM = 'packItem'
 const PLAYING = 'playing'
 const GAMEOVER = 'gameover'
+const WIN = 'win'
 const CHANGING = 'changing'
 const YOU = 'You'
 const DEAD = 'dead'
@@ -135,10 +140,17 @@ class App extends Component {
 
   walk () {
     const milesGained = randomGenerator(12, 25)
-    let newMiles = this.state.progress.miles
-    newMiles += milesGained
-    let newDays = this.state.progress.days
-    newDays += 1
+    const newProgress = Object.assign({}, this.state.progress)
+    newProgress['miles'] += milesGained
+    newProgress['days'] += 1
+    if (newProgress['miles'] > 1000) {
+      this.finishGame(newProgress)
+    } else {
+      this.continueGame(newProgress)
+    }
+  }
+
+  continueGame (progressObj) {
     const peopleList = this.state.people.map((person) => Object.assign({}, person))
     const peopleLiving = peopleList.filter((character) => character.status !== DEAD)
     let newPeopleList = this.peopleLoseHealth(peopleLiving)
@@ -157,14 +169,21 @@ class App extends Component {
       newPeopleList = this.randomCharacterDeath(newPeopleList, badLuck)
     }
     this.setState({
-      progress: {miles: newMiles, days: newDays},
+      progress: progressObj,
       inventory: {food: newFood},
       people: newPeopleList
     })
   }
 
+  finishGame (progress) {
+    const gameStateObject = Object.assign({}, this.state.game)
+    gameStateObject['gameState'] = WIN
+    const progressObject = Object.assign({}, this.state.progress)
+    this.setState({game: {gameState: gameStateObject}, progress: progressObject})
+  }
+
   peopleLoseHealth (peopleLiving) {
-    const lostHealth = this.state.inventory.food > 0 ? 5 : 20
+    const lostHealth = this.state.inventory.food > 0 ? 0 : 20 // correct 0 to 5
     const peopleList = peopleLiving.map(function (character) { character.health -= lostHealth; return character })
     const anyoneDead = peopleList.filter((person) => person.health <= 0)
     if (anyoneDead.length > 0) {
@@ -207,6 +226,11 @@ class App extends Component {
           ? `${peopleList[depressedCharacterPosition].name} have died of melancholy.`
           : `${peopleList[depressedCharacterPosition].name} has died of melancholy.`
         gameMessage = message
+        if (peopleList[depressedCharacterPosition].name === 'You') {
+          const newGameObject = Object.assign({}, this.state.game)
+          newGameObject['gameState'] = GAMEOVER
+          this.setState({game: newGameObject})
+        }
       }
     }
     return peopleList
@@ -388,7 +412,12 @@ class App extends Component {
       )
     } else {
       return (
-        <div>page changed</div>
+        <Win
+          days={this.state.progress.days}
+          miles={this.state.progress.miles}
+          food={this.state.inventory.food}
+          health={this.healthRepresentation(this.state.people[0].health)}
+        />
       )
     }
   }

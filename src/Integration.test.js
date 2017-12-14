@@ -306,4 +306,12 @@ describe('integration testing', () => {
     const gameOverComponent = app.find('GameOver')
     expect(gameOverComponent.length).toBe(1)
   })
+
+  // it('changes gameState to "win" when the user hits a high enough mile count', () => {
+  // how to simulte high enough mile count
+  // })
+
+  // it('creates a Win component when the gameState changes to "WIN"', () => {
+  //   // how to simulate a win, get mile counter up high enough
+  // })
 })
