@@ -48,6 +48,11 @@ describe('integration testing', () => {
     playInput.simulate('keyDown', mockPlayEvent)
   }
 
+  it('renders without crashing', () => {
+    const div = document.createElement('div')
+    ReactDOM.render(<App />, div)
+  })
+
   it('loads a DifficultyPage component when the state game gameState is "difficulty', () => {
     const difficultyPageComponent = app.find('DifficultyPage').length
     expect(difficultyPageComponent).toBe(1)

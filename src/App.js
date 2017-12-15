@@ -28,6 +28,7 @@ const GOOD = 'good'
 const FAIR = 'fair'
 const POOR = 'poor'
 const Y = 'y'
+const TRAIL_MILES = 1000
 
 let changeRepresentation
 let gameMessage
@@ -143,7 +144,7 @@ class App extends Component {
     const newProgress = Object.assign({}, this.state.progress)
     newProgress['miles'] += milesGained
     newProgress['days'] += 1
-    if (newProgress['miles'] > 1000) {
+    if (newProgress['miles'] > TRAIL_MILES) {
       this.finishGame(newProgress)
     } else {
       this.continueGame(newProgress)
@@ -166,7 +167,8 @@ class App extends Component {
     }
     if (gameMessage.length === 0) {
       const badLuck = randomGenerator(1, 6) === 3
-      newPeopleList = this.randomCharacterDeath(newPeopleList, badLuck)
+      const luck = randomGenerator(1, 4)
+      newPeopleList = this.randomCharacterDeath(newPeopleList, badLuck, luck)
     }
     this.setState({
       progress: progressObj,
@@ -177,9 +179,13 @@ class App extends Component {
 
   finishGame (progress) {
     const gameStateObject = Object.assign({}, this.state.game)
+    console.log(gameStateObject)
     gameStateObject['gameState'] = WIN
+    console.log(gameStateObject)
     const progressObject = Object.assign({}, this.state.progress)
-    this.setState({game: {gameState: gameStateObject}, progress: progressObject})
+    this.setState({
+      game: gameStateObject,
+      progress: progressObject})
   }
 
   peopleLoseHealth (peopleLiving) {
@@ -203,7 +209,7 @@ class App extends Component {
     return peopleList
   }
 
-  randomCharacterDeath (peopleList, badLuck) {
+  randomCharacterDeath (peopleList, badLuck, luck) {
     if (badLuck === false) {
       return peopleList
     }
@@ -216,7 +222,6 @@ class App extends Component {
       const message = randomPersonName === 'You' ? `${randomPersonName} are depressed.` : `${randomPersonName} is depressed.`
       gameMessage = message
     } else {
-      const luck = randomGenerator(1, 4)
       const depressedCharacterPosition = peopleList.indexOf(depressedCharacter)
       if (luck === 1) {
         peopleList[depressedCharacterPosition].status = ALIVE
