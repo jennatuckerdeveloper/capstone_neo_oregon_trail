@@ -42,12 +42,6 @@ describe('integration testing', () => {
     finishedPacking.simulate('keyDown', mockOnConfirmPack)
   }
 
-  const onPlay = function () {
-    const mockPlayEvent = {target: {value: '1'}, keyCode: 13}
-    const playInput = app.find('#play')
-    playInput.simulate('keyDown', mockPlayEvent)
-  }
-
   it('renders without crashing', () => {
     const div = document.createElement('div')
     ReactDOM.render(<App />, div)
@@ -250,73 +244,4 @@ describe('integration testing', () => {
     const gameMessage = app.find('#gameMessage').text()
     expect(gameMessage).toBe('You have run out of food.')
   })
-
-  it('changes the status of one person to "dead" when any number of health scores reaches 0 or less', () => {
-    toNaming()
-    toPacking()
-    toPlaying()
-    onPlay()
-    onPlay()
-    onPlay()
-    onPlay()
-    onPlay()
-    const people = app.state().people
-    const statusDead = people.filter((personObject) => personObject.status === 'dead')
-    expect(statusDead.length).toBe(1)
-  })
-
-  it('presents a game message when the status of a character changes to dead', () => {
-    toNaming()
-    toPacking()
-    toPlaying()
-    onPlay()
-    onPlay()
-    onPlay()
-    onPlay()
-    onPlay()
-    const gameMessage = app.find('#gameMessage').text()
-    expect(gameMessage.length > 0).toBe(true)
-  })
-
-  it('changes the state game gameState to "gameover" when the "You" character has a status of "dead"', () => {
-    toNaming()
-    toPacking()
-    toPlaying()
-    onPlay()
-    onPlay()
-    onPlay()
-    onPlay()
-    onPlay()
-    onPlay()
-    onPlay()
-    onPlay()
-    onPlay()
-    const gameMessage = app.find('#gameMessage').text()
-    expect(gameMessage).toBe('You have died of starvation and exhaustion.')
-  })
-
-  it('changes the state game gameState to "gameover" when the "You" character has a status of "dead"', () => {
-    toNaming()
-    toPacking()
-    toPlaying()
-    onPlay()
-    onPlay()
-    onPlay()
-    onPlay()
-    onPlay()
-    onPlay()
-    onPlay()
-    onPlay()
-    onPlay()
-    const gameOverComponent = app.find('GameOver')
-    expect(gameOverComponent.length).toBe(1)
-  })
-
-  // it('changes gameState to "win" when the user hits a high enough mile count', () => {
-  // how to simulte high enough mile count
-  // })
-
-  // it('creates a Win component when the gameState changes to "WIN"', () => {
-  //   // how to simulate a win, get mile counter up high enough
-  // })
 })

@@ -140,24 +140,40 @@ class App extends Component {
   }
 
   walk () {
+    // walk is the only thing that will set state
+    let forSetState
     const milesGained = randomGenerator(12, 25)
     const newProgress = Object.assign({}, this.state.progress)
     newProgress['miles'] += milesGained
     newProgress['days'] += 1
     if (newProgress['miles'] > TRAIL_MILES) {
-      this.finishGame(newProgress)
+      forSetState = this.finishGame(newProgress)
     } else {
-      this.continueGame(newProgress)
+      forSetState = this.continueGame(newProgress)
+    }
+    this.setState(forSetState)
+  }
+
+  finishGame (progress) {
+    const gameStateObject = Object.assign({}, this.state.game)
+    gameStateObject['gameState'] = WIN
+    const progressObject = Object.assign({}, this.state.progress)
+    return {
+      game: gameStateObject,
+      progress: progressObject
     }
   }
 
   continueGame (progressObj) {
     const peopleList = this.state.people.map((person) => Object.assign({}, person))
     const peopleLiving = peopleList.filter((character) => character.status !== DEAD)
-    let newPeopleList = this.peopleLoseHealth(peopleLiving)
+    let lessHealthPeopleList = this.peopleLoseHealth(peopleLiving)
+    let deadenedCharacterList = this.handleCharacterDeath(lessHealthPeopleList)
+
     const foodPortions = peopleLiving.length
     const foodLost = randomGenerator(2 * foodPortions, 5 * foodPortions)
     let newFood = this.state.inventory.food
+
     if (this.state.inventory.food > 0) {
       newFood -= foodLost
     }
@@ -168,77 +184,79 @@ class App extends Component {
     if (gameMessage.length === 0) {
       const badLuck = randomGenerator(1, 6) === 3
       const luck = randomGenerator(1, 4)
-      newPeopleList = this.randomCharacterDeath(newPeopleList, badLuck, luck)
+      deadenedCharacterList = this.randomCharacterDeath(deadenedCharacterList, badLuck, luck)
     }
-    this.setState({
+
+    const youIsDead = this.isYouDead(deadenedCharacterList)
+    const gameObj = {
+      gameState: youIsDead ? GAMEOVER : PLAYING,
+      difficulty: this.state.game.difficulty
+    }
+
+    return {
+      game: gameObj,
       progress: progressObj,
       inventory: {food: newFood},
-      people: newPeopleList
-    })
-  }
-
-  finishGame (progress) {
-    const gameStateObject = Object.assign({}, this.state.game)
-    console.log(gameStateObject)
-    gameStateObject['gameState'] = WIN
-    console.log(gameStateObject)
-    const progressObject = Object.assign({}, this.state.progress)
-    this.setState({
-      game: gameStateObject,
-      progress: progressObject})
+      people: deadenedCharacterList
+    }
   }
 
   peopleLoseHealth (peopleLiving) {
     const lostHealth = this.state.inventory.food > 0 ? 0 : 20 // correct 0 to 5
     const peopleList = peopleLiving.map(function (character) { character.health -= lostHealth; return character })
-    const anyoneDead = peopleList.filter((person) => person.health <= 0)
+    return peopleList
+  }
+
+  isYouDead (deadenedCharacterList) {
+    const newCharacterList = deadenedCharacterList.map((person) => Object.assign({}, person))
+    const you = newCharacterList.find((person) => person.name === YOU)
+    return you.status === DEAD
+  }
+
+  handleCharacterDeath (peopleList) {
+    let newList = peopleList.map((person) => Object.assign({}, person))
+    const anyoneDead = newList.filter((person) => person.health <= 0)
     if (anyoneDead.length > 0) {
       const toChange = anyoneDead.pop()
-      const personToChange = peopleList.indexOf(toChange)
-      peopleList[personToChange].status = DEAD
-      peopleList[personToChange].health = 0
+      const personToChange = newList.indexOf(toChange) // also for message
+      newList[personToChange].status = DEAD
+      newList[personToChange].health = 0
+      // to generate message, will change
       const deadPersonName = toChange.name
       const message = deadPersonName === 'You'
         ? `${deadPersonName} have died of starvation and exhaustion.`
         : `${deadPersonName} has died of starvation and exhaustion.`
       gameMessage = message
-      if (deadPersonName === YOU) {
-        this.setState({game: {gameState: GAMEOVER}})
-      }
     }
-    return peopleList
+    return newList
   }
 
   randomCharacterDeath (peopleList, badLuck, luck) {
     if (badLuck === false) {
       return peopleList
     }
-    const depressedCharacter = peopleList.find((person) => person.status === 'depressed')
+    let newPeopleList = peopleList.map((person) => Object.assign({}, person))
+    const depressedCharacter = newPeopleList.find((person) => person.status === 'depressed')
     if (depressedCharacter === undefined) {
-      const randomPersonName = peopleList[Math.floor(Math.random() * peopleList.length)].name
-      const randomPersonObject = peopleList.find((person) => person.name === randomPersonName)
-      const randomPersonPosition = peopleList.indexOf(randomPersonObject)
-      peopleList[randomPersonPosition].status = 'depressed'
+      const randomPersonName = newPeopleList[Math.floor(Math.random() * newPeopleList.length)].name
+      const randomPersonObject = newPeopleList.find((person) => person.name === randomPersonName)
+      const randomPersonPosition = newPeopleList.indexOf(randomPersonObject)
+      newPeopleList[randomPersonPosition].status = 'depressed'
       const message = randomPersonName === 'You' ? `${randomPersonName} are depressed.` : `${randomPersonName} is depressed.`
       gameMessage = message
     } else {
-      const depressedCharacterPosition = peopleList.indexOf(depressedCharacter)
+      const depressedCharacterPosition = newPeopleList.indexOf(depressedCharacter)
       if (luck === 1) {
-        peopleList[depressedCharacterPosition].status = ALIVE
+        newPeopleList[depressedCharacterPosition].status = ALIVE
       } else if (luck === 2) {
-        peopleList[depressedCharacterPosition].status = DEAD
-        const message = peopleList[depressedCharacterPosition].name === 'You'
-          ? `${peopleList[depressedCharacterPosition].name} have died of melancholy.`
-          : `${peopleList[depressedCharacterPosition].name} has died of melancholy.`
+        newPeopleList[depressedCharacterPosition].status = DEAD
+        const message = newPeopleList[depressedCharacterPosition].name === 'You'
+          ? `${newPeopleList[depressedCharacterPosition].name} have died of melancholy.`
+          : `${newPeopleList[depressedCharacterPosition].name} has died of melancholy.`
         gameMessage = message
-        if (peopleList[depressedCharacterPosition].name === 'You') {
-          const newGameObject = Object.assign({}, this.state.game)
-          newGameObject['gameState'] = GAMEOVER
-          this.setState({game: newGameObject})
-        }
       }
     }
-    return peopleList
+    return newPeopleList
   }
 
   onUserPlay (e) {
