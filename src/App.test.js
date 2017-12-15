@@ -66,7 +66,7 @@ describe('integration testing', () => {
       {name: 'Al', status: 'alive', health: 0},
       {name: 'John', status: 'alive', health: 0}
     ]
-    const changedList = app.handleCharacterDeath(mixedStatusPeopleList)
+    const changedList = app.statusDeadChange(mixedStatusPeopleList)
     const num = changedList.filter((person) => person.status === 'dead')
     const oneWasChanged = num.length
     expect(oneWasChanged).toBe(1)

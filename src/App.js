@@ -30,9 +30,6 @@ const POOR = 'poor'
 const Y = 'y'
 const TRAIL_MILES = 1000
 
-let changeRepresentation
-let gameMessage
-
 const randomGenerator = function (lowest, highest) {
   const min = Math.ceil(lowest)
   const max = Math.floor(highest)
@@ -91,7 +88,8 @@ class App extends Component {
     this.state = {
       game: {
         gameState: DIFFICULTY,
-        difficulty: 'notSet'
+        difficulty: 'notSet',
+        gameMessage: ''
       },
       progress: {
         days: 0,
@@ -104,7 +102,7 @@ class App extends Component {
         tent: 0,
         sleepingBag: 0,
         clothing: 0,
-        food: 0
+        food: 1
       },
       people: [{
         name: YOU,
@@ -165,46 +163,93 @@ class App extends Component {
   }
 
   continueGame (progressObj) {
-    const peopleList = this.state.people.map((person) => Object.assign({}, person))
-    const peopleLiving = peopleList.filter((character) => character.status !== DEAD)
-    let lessHealthPeopleList = this.peopleLoseHealth(peopleLiving)
-    let deadenedCharacterList = this.handleCharacterDeath(lessHealthPeopleList)
-
-    const foodPortions = peopleLiving.length
-    const foodLost = randomGenerator(2 * foodPortions, 5 * foodPortions)
-    let newFood = this.state.inventory.food
-
-    if (this.state.inventory.food > 0) {
-      newFood -= foodLost
+    let newGameMessage = ''
+    const peopleLiving = this.ignoreStatusDead(this.state.people) // removes all dead characters from play
+    let lessHealthPeopleList = this.peopleLoseHealth(peopleLiving) // decrements all charaters' health, higher decrement if no food
+    let newCharacterList = this.statusDeadChange(lessHealthPeopleList) // changes stauts of one character with health below 0 to "dead"
+    newGameMessage = this.starvedCharacterMessage(newCharacterList) // returns message or empty string
+    let noMessage = newGameMessage.length < 1
+    const newFood = this.decrementFood(newCharacterList)
+    if (this.state.inventory.food > 0 && newFood.food <= 0) { // creates game message when player runs out of food
+      newGameMessage = 'You have run out of food.'
     }
-    if (newFood <= 0) {
-      gameMessage = 'You have run out of food.'
-      newFood = 'no food'
-    }
-    if (gameMessage.length === 0) {
+    if (noMessage) {
       const badLuck = randomGenerator(1, 6) === 3
       const luck = randomGenerator(1, 4)
-      deadenedCharacterList = this.randomCharacterDeath(deadenedCharacterList, badLuck, luck)
+      newCharacterList = this.randomCharacterDeath(newCharacterList, badLuck, luck) // returns character list with a depresed or dead character
+      const newlyDepressed = newCharacterList.filter((person) => person.status === 'depressed').filter((person) => person in this.state.people)
+      const newlyDead = newCharacterList.filter((person) => person.status === 'dead').filter((person) => person in this.state.people)
+      const anyNewDepressed = newlyDepressed.length > 0
+      const anyNewlyDead = newlyDead > 0
+      if (anyNewDepressed) {
+        const newlyDepressedName = newlyDepressed.name
+        newGameMessage = newlyDepressedName === 'You' ? `${newlyDepressedName} are depressed.` : `${newlyDepressedName} is depressed.`
+      }
+      if (anyNewlyDead) {
+        const newlyDeadName = newlyDead.name
+        newGameMessage = newlyDeadName === 'You'
+          ? `${newlyDeadName} have died of melancholy.`
+          : `${newlyDeadName} has died of melancholy.`
+      }
     }
-
-    const youIsDead = this.isYouDead(deadenedCharacterList)
-    const gameObj = {
-      gameState: youIsDead ? GAMEOVER : PLAYING,
-      difficulty: this.state.game.difficulty
+    const youIsDead = this.isYouDead(newCharacterList) // bool
+    const newGameObj = { // gameObj changed for 'You' dead, ends game
+      gameState: youIsDead ? GAMEOVER : PLAYING, // continues or ends game depending on if 'You' in new people list is dead
+      difficulty: this.state.game.difficulty, // preserves difficulty
+      gameMessage: newGameMessage // new game message
     }
 
     return {
-      game: gameObj,
-      progress: progressObj,
-      inventory: {food: newFood},
-      people: deadenedCharacterList
+      game: newGameObj, // hardcoded from inside function
+      progress: progressObj, // passes progressObj from walk unchanged
+      inventory: newFood, // replaces entire inventory with new food??
+      people: newCharacterList // changed people list
     }
   }
 
+  starvedCharacterMessage (characterList) {
+    const deadThisPlay = characterList.filter((person) => person.status === 'dead')
+    if (deadThisPlay.length > 0) {
+      const deadPersonName = deadThisPlay[0].name
+      const message = deadPersonName === 'You'
+        ? `${deadPersonName} have died of starvation and exhaustion.`
+        : `${deadPersonName} has died of starvation and exhaustion.`
+      const newGameMessage = message
+      return newGameMessage
+    } else {
+      return ''
+    }
+  }
+
+  ignoreStatusDead () {
+    const peopleList = this.state.people.map((person) => Object.assign({}, person))
+    const peopleLiving = peopleList.filter((character) => character.status !== DEAD)
+    return peopleLiving
+  }
+
   peopleLoseHealth (peopleLiving) {
-    const lostHealth = this.state.inventory.food > 0 ? 0 : 20 // correct 0 to 5
+    const lostHealth = this.state.inventory.food > 0 ? 5 : 20 // correct 0 to 5
     const peopleList = peopleLiving.map(function (character) { character.health -= lostHealth; return character })
     return peopleList
+  }
+
+  decrementFood (newCharacterList) {
+    const inventoryObject = Object.assign({}, this.state.inventory)
+    const foodPortions = newCharacterList.length // number of people living and eating
+    const foodLost = randomGenerator(2 * foodPortions, 5 * foodPortions) // pounds eaten
+    let newFood // pounds of food
+    if (this.state.inventory.food > 0) {
+      newFood = inventoryObject.food - foodLost
+      if (newFood < 0) {
+        inventoryObject['food'] = 0
+      } else {
+        inventoryObject['food'] = newFood
+      }
+    } else if (newFood <= 0) {
+      newFood = 0
+      inventoryObject['food'] = newFood
+    }
+    return inventoryObject
   }
 
   isYouDead (deadenedCharacterList) {
@@ -213,7 +258,8 @@ class App extends Component {
     return you.status === DEAD
   }
 
-  handleCharacterDeath (peopleList) {
+  statusDeadChange (peopleList) {
+    // changes one character's status to 'dead' when any number of characters health below 0
     let newList = peopleList.map((person) => Object.assign({}, person))
     const anyoneDead = newList.filter((person) => person.health <= 0)
     if (anyoneDead.length > 0) {
@@ -221,12 +267,7 @@ class App extends Component {
       const personToChange = newList.indexOf(toChange) // also for message
       newList[personToChange].status = DEAD
       newList[personToChange].health = 0
-      // to generate message, will change
-      const deadPersonName = toChange.name
-      const message = deadPersonName === 'You'
-        ? `${deadPersonName} have died of starvation and exhaustion.`
-        : `${deadPersonName} has died of starvation and exhaustion.`
-      gameMessage = message
+      return newList
     }
     return newList
   }
@@ -242,25 +283,18 @@ class App extends Component {
       const randomPersonObject = newPeopleList.find((person) => person.name === randomPersonName)
       const randomPersonPosition = newPeopleList.indexOf(randomPersonObject)
       newPeopleList[randomPersonPosition].status = 'depressed'
-      const message = randomPersonName === 'You' ? `${randomPersonName} are depressed.` : `${randomPersonName} is depressed.`
-      gameMessage = message
     } else {
       const depressedCharacterPosition = newPeopleList.indexOf(depressedCharacter)
       if (luck === 1) {
         newPeopleList[depressedCharacterPosition].status = ALIVE
       } else if (luck === 2) {
         newPeopleList[depressedCharacterPosition].status = DEAD
-        const message = newPeopleList[depressedCharacterPosition].name === 'You'
-          ? `${newPeopleList[depressedCharacterPosition].name} have died of melancholy.`
-          : `${newPeopleList[depressedCharacterPosition].name} has died of melancholy.`
-        gameMessage = message
       }
     }
     return newPeopleList
   }
 
   onUserPlay (e) {
-    gameMessage = ''
     if (checkForSpecialCharacter(e)) {
       if (e.target.value === '1') {
         this.walk()
@@ -335,12 +369,12 @@ class App extends Component {
       const changeToMake = itemLimit < userChoice ? itemLimit : userChoice
       const userSuccess = itemLimit >= userChoice
       message = this.packChangeRepresentation(userSuccess, changeToMake, itemToChange)
-      changeRepresentation = message
       changingInventory[itemToChange] = changeToMake
-      const pageChange = Object.assign({}, this.state.game)
-      pageChange['gameState'] = PACKING
+      const newGameObj = Object.assign({}, this.state.game)
+      newGameObj['gameState'] = PACKING
+      newGameObj['gameMessage'] = message
       this.setState({
-        game: pageChange,
+        game: newGameObj,
         inventory: changingInventory})
     }
   }
@@ -358,6 +392,7 @@ class App extends Component {
     if (checkForSpecialCharacter(e) && e.target.value.toLowerCase() === Y) {
       const gameObject = Object.assign({}, this.state.game)
       gameObject['gameState'] = PLAYING
+      gameObject['gameMessage'] = ''
       this.setState({game: gameObject})
     }
   }
@@ -396,7 +431,7 @@ class App extends Component {
           food={this.state.inventory.food}
           onPackingChoice={this.onPackingChoice}
           confirmPacking={this.confirmPacking}
-          gameMessage={changeRepresentation}
+          gameMessage={this.state.game.gameMessage}
 
         />
       )
@@ -408,7 +443,7 @@ class App extends Component {
           food={this.state.inventory.food}
           health={this.healthRepresentation(this.state.people[0].health)}
           onUserPlay={this.onUserPlay}
-          gameMessage={gameMessage}
+          gameMessage={this.state.game.gameMessage}
         />
       )
     } else if (this.state.game.gameState === DIFFICULTY) {
@@ -430,7 +465,7 @@ class App extends Component {
           days={this.state.progress.days}
           miles={this.state.progress.miles}
           food={this.state.inventory.food}
-          gameMessage={gameMessage}
+          gameMessage={this.state.game.gameMessage}
         />
       )
     } else {

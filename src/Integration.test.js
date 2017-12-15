@@ -227,8 +227,7 @@ describe('integration testing', () => {
     const playInput = app.find('#play')
     const mockPlayEvent = {target: {value: '1'}, keyCode: 13}
     playInput.simulate('keyDown', mockPlayEvent)
-    const afterPlayPeopleLiving = app.state().people.filter((person) => person.status === 'alive')
-    const afterPlayHealth = afterPlayPeopleLiving.map((person) => person.health)
+    const afterPlayHealth = app.state().people.map((person) => person.health)
     beginningHealth.forEach((healthScore, index) => {
       expect(healthScore > afterPlayHealth[index]).toBe(true)
     })
