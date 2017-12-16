@@ -8,6 +8,8 @@ import DifficultyPage from './DifficultyPage'
 import GameOver from './GameOver'
 import Win from './Win'
 
+const fetch = require('node-fetch')
+
 // write tests for random character death
 // can I import the function and test it? or do I have a testing problem because it's random?
 
@@ -18,7 +20,9 @@ const ITEM = 'packItem'
 const PLAYING = 'playing'
 const GAMEOVER = 'gameover'
 const WIN = 'win'
+const FINISH = 'finish'
 const CHANGING = 'changing'
+const WALL = 'wall'
 const YOU = 'You'
 const DEAD = 'dead'
 const ALIVE = 'alive'
@@ -87,7 +91,7 @@ class App extends Component {
     super(props)
     this.state = {
       game: {
-        gameState: DIFFICULTY,
+        gameState: FINISH,
         difficulty: 'notSet',
         gameMessage: ''
       },
@@ -135,6 +139,8 @@ class App extends Component {
     this.onPackingChoice = this.onPackingChoice.bind(this)
     this.confirmPacking = this.confirmPacking.bind(this)
     this.handleNumberToPack = this.handleNumberToPack.bind(this)
+    this.onFinish = this.onFinish.bind(this)
+    this.signWall = this.signWall.bind(this)
   }
 
   walk () {
@@ -200,10 +206,10 @@ class App extends Component {
     }
 
     return {
-      game: newGameObj, // hardcoded from inside function
-      progress: progressObj, // passes progressObj from walk unchanged
-      inventory: newFood, // replaces entire inventory with new food??
-      people: newCharacterList // changed people list
+      game: newGameObj,
+      progress: progressObj,
+      inventory: newFood,
+      people: newCharacterList
     }
   }
 
@@ -264,7 +270,7 @@ class App extends Component {
     const anyoneDead = newList.filter((person) => person.health <= 0)
     if (anyoneDead.length > 0) {
       const toChange = anyoneDead.pop()
-      const personToChange = newList.indexOf(toChange) // also for message
+      const personToChange = newList.indexOf(toChange)
       newList[personToChange].status = DEAD
       newList[personToChange].health = 0
       return newList
@@ -411,6 +417,41 @@ class App extends Component {
     }
   }
 
+  onFinish (e) {
+    const newGameObject = Object.assign({}, this.state.game)
+    newGameObject['gameState'] = FINISH
+    this.setState({game: newGameObject})
+  }
+
+  signWall (e) {
+    if (checkForSpecialCharacter(e)) {
+      const userEntry = e.target.value
+      if (userEntry !== '') {
+        const playerName = e.target.value
+        const allCharacters = this.state.people.map((person) => Object.assign(person))
+        const deadCharacters = allCharacters.filter((person) => person.status === DEAD)
+        const aliveCharacters = allCharacters.filter((person) => person.status === ALIVE || person.status === 'depressed')
+        const lost = deadCharacters.map((person) => person.name)
+        const survived = aliveCharacters.map((person) => person.name)
+        const youIndex = survived.indexOf(YOU)
+        survived[youIndex] = playerName
+        const pkg = {
+          method: 'POST',
+          body: JSON.stringify({
+            survived: survived,
+            lost: lost
+          })
+        }
+        fetch('https://neo-oregon-trail.firebaseio.com/wall.json', pkg)
+          .then(console.log('fetch ran post!'))
+          .catch(console.log)
+      }
+      const newGameObject = Object.assign({}, this.state.game)
+      newGameObject['gameState'] = WALL
+      this.setState({game: newGameObject})
+    }
+  }
+
   render () {
     if (this.state.game.gameState === NAMING) {
       return (
@@ -468,14 +509,31 @@ class App extends Component {
           gameMessage={this.state.game.gameMessage}
         />
       )
-    } else {
+    } else if (this.state.game.gameState === WIN) {
       return (
         <Win
           days={this.state.progress.days}
           miles={this.state.progress.miles}
           food={this.state.inventory.food}
           health={this.healthRepresentation(this.state.people[0].health)}
+          onFinish={this.onFinish}
         />
+      )
+    } else if (this.state.game.gameState === FINISH) {
+      return (
+        <div>
+          <p>The National Parks Service has turned the walls of a central Ranger
+          Station into a monument to those who have taken the trail.</p>
+          <p>
+            Please enter your name if you want your team remembered on this monument.
+            <input type='text' onKeyDown={this.signWall} />
+          </p>
+          <p>Otherwise, press leave blank and press SPACEBAR or ENTER</p>
+        </div>
+      )
+    } else if (this.state.game.gameState === WALL) {
+      return (
+        <div>wall of names</div>
       )
     }
   }

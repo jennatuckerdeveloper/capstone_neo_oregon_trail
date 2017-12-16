@@ -9,6 +9,7 @@
     "eslint": "^4.12.1",
     "eslint-config-standard-jsx": "^4.0.2",
     "eslint-plugin-react": "^7.5.1",
+    "fetch": "^1.1.0",
     "react": "^16.2.0",
     "react-dom": "^16.2.0",
     "react-scripts": "1.0.17"
