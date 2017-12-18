@@ -7,12 +7,16 @@ import ItemPack from './ItemPack'
 import DifficultyPage from './DifficultyPage'
 import GameOver from './GameOver'
 import Win from './Win'
+import Wall from './Wall'
 
 const fetch = require('node-fetch')
 
-// fetch the data
-// make a list of divs for each
-// how is it sorted?
+// i have an asynchronicity problem --> the user signs, but their brick does not show up until they reload the page
+/*
+the fetch call happens before the component mounts
+the setState is called then
+the fetch and call need to be done again when a component loads
+*/
 
 const DIFFICULTY = 'difficulty'
 const NAMING = 'naming'
@@ -92,7 +96,7 @@ class App extends Component {
     super(props)
     this.state = {
       game: {
-        gameState: WALL,
+        gameState: FINISH,
         difficulty: 'notSet',
         gameMessage: ''
       },
@@ -133,7 +137,8 @@ class App extends Component {
         status: ALIVE
       }
       ],
-      data: []}
+      data: []
+    }
     this.onUserPlay = this.onUserPlay.bind(this)
     this.handleName = this.handleName.bind(this)
     this.onConfirmNames = this.onConfirmNames.bind(this)
@@ -445,93 +450,25 @@ class App extends Component {
           })
         }
         fetch('https://neo-oregon-trail.firebaseio.com/wall.json', pkg)
-          .then(console.log('fetch ran post!'))
+          .then(
+            /* eslint-disable no-console */
+            fetch('https://neo-oregon-trail.firebaseio.com/wall.json')
+              .then((response) => response.json())
+              .then((allData) => {
+                const orderedData = Object.entries(allData).reverse()
+                this.setState({data: orderedData})
+              }))
+          .then(() => {
+            const newGameObject = Object.assign({}, this.state.game)
+            newGameObject['gameState'] = WALL
+            this.setState({game: newGameObject})
+          })
           .catch(console.log)
       }
-      const newGameObject = Object.assign({}, this.state.game)
-      newGameObject['gameState'] = WALL
-      this.setState({game: newGameObject})
     }
   }
 
-  componentWillMount () {
-    /* eslint-disable no-console */
-    fetch('https://neo-oregon-trail.firebaseio.com/wall.json')
-      .then((response) => response.json())
-      .then((allData) => {
-        // console.log('fetched data', allData)
-        this.setState({data: Object.entries(allData)})
-        // const dataKeys = Object.keys(data) // how is this sorted?  could use a .sort
-        // this.setState({dataKeys}, () => { this.fetchData(1) })
-      })
-      .catch(error => console.log(error))
-  }
-
   render () {
-    // console.log('data >>>>', this.state.data)
-    const wallEntries = this.state.data.map(([key, playerEntry]) => {
-      const brickKey = `brick${key}`
-      const lost = playerEntry.lost
-      const survived = playerEntry.survived
-      let lostText
-      let survivedText
-      // // console.log(lost)
-      // // console.log(survived)
-      if (lost === undefined) {
-        if (survived.legnth === 1) {
-          survivedText = lost
-        } else if (survived.length === 2) {
-          survivedText = `${lost[0]} and ${lost[1]}`
-        } else if (survived.length > 2) {
-          survivedText = survived.map((name, i, a) => {
-            if (a.length - 1 === i) {
-              return `and ${name}  `
-            } else {
-              return `${name}, `
-            }
-          })
-        }
-        return (
-          <div className='brick' id={brickKey} key={brickKey}>
-            <p>Took the trail: {survivedText}</p>
-          </div>
-        )
-      } else {
-        if (lost.length === 1) {
-          lostText = lost
-        } else if (lost.length === 2) {
-          lostText = `${lost[0]} and ${lost[1]}`
-        } else if (lost.length > 2) {
-          lostText = lost.map((name, i, a) => {
-            if (a.length - 1 === i) {
-              return `and ${name}  `
-            } else {
-              return `${name}, `
-            }
-          })
-        }
-
-        if (survived.legnth === 1) {
-          survivedText = survived
-        } else if (survived.length === 2) {
-          survivedText = `${survived[0]} and ${survived[1]}`
-        } else if (survived.length > 2) {
-          survivedText = survived.map((name, i, a) => {
-            if (a.length - 1 === i) {
-              return `and ${name}  `
-            } else {
-              return `${name}, `
-            }
-          })
-        }
-        return (
-          <div className='brick' id={key} key={brickKey}>
-            <p>Lost on the trail: {lostText}</p>
-            <p>Suvived by: {survivedText}</p>
-          </div>
-        )
-      }
-    })
     if (this.state.game.gameState === NAMING) {
       return (
         <Naming
@@ -612,7 +549,9 @@ class App extends Component {
       )
     } else if (this.state.game.gameState === WALL) {
       return (
-        <div>{wallEntries}</div>
+        <Wall
+          data={this.state.data}
+        />
       )
     }
   }
