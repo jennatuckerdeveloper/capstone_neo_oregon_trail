@@ -2,7 +2,7 @@ import React, { Component } from 'react'
 
 export default class Wall extends Component {
   render () {
-    const wallEntries = this.state.data.map(([key, playerEntry]) => {
+    const wallEntries = this.props.data.map(([key, playerEntry]) => {
       const brickKey = `brick${key}`
       const lost = playerEntry.lost
       const survived = playerEntry.survived

@@ -1,5 +1,3 @@
-// this has not changed
-
 import React, { Component } from 'react'
 import './App.css'
 import PlayMenu from './PlayMenu'
@@ -100,7 +98,7 @@ class App extends Component {
     super(props)
     this.state = {
       game: {
-        gameState: DIFFICULTY,
+        gameState: FINISH,
         difficulty: NOT_SET,
         gameMessage: ''
       },
@@ -152,6 +150,15 @@ class App extends Component {
     this.handleNumberToPack = this.handleNumberToPack.bind(this)
     this.onFinish = this.onFinish.bind(this)
     this.signWall = this.signWall.bind(this)
+  }
+
+  componentWillMount () {
+    fetch('https://neo-oregon-trail.firebaseio.com/wall.json')
+      .then((response) => response.json())
+      .then((allData) => {
+        const orderedData = Object.entries(allData).reverse()
+        this.setState({data: orderedData})
+      })
   }
 
   onUserPlay (e) {
@@ -433,12 +440,8 @@ class App extends Component {
 
   signWall (e) {
     if (checkForSpecialCharacter(e)) {
-      console.log('signWall triggered')
       const userEntry = e.target.value
-      console.log('>>>', userEntry)
-      console.log(typeof (userEntry))
       if (userEntry !== '') {
-        console.log('in if')
         const playerName = e.target.value
         const allCharacters = this.state.people.map((person) => Object.assign(person))
         const deadCharacters = allCharacters.filter((person) => person.status === DEAD)
@@ -455,14 +458,15 @@ class App extends Component {
           })
         }
         fetch('https://neo-oregon-trail.firebaseio.com/wall.json', pkg)
-          .then(
+          .then((response) => {
             /* eslint-disable no-console */
-            fetch('https://neo-oregon-trail.firebaseio.com/wall.json')
-              .then((response) => response.json())
-              .then((allData) => {
-                const orderedData = Object.entries(allData).reverse()
-                this.setState({data: orderedData})
-              }))
+            return fetch('https://neo-oregon-trail.firebaseio.com/wall.json')
+          })
+          .then((response) => response.json())
+          .then((allData) => {
+            const orderedData = Object.entries(allData).reverse()
+            this.setState({data: orderedData})
+          })
           .then(() => {
             const newGameObject = Object.assign({}, this.state.game)
             newGameObject['gameState'] = WALL
@@ -470,16 +474,9 @@ class App extends Component {
           })
           .catch(console.log)
       } else {
-        console.log('else ran')
-        fetch('https://neo-oregon-trail.firebaseio.com/wall.json')
-          .then((response) => response.json())
-          .then((allData) => {
-            const orderedData = Object.entries(allData).reverse()
-            const newGameObject = Object.assign({}, this.state.game)
-            newGameObject['gameState'] = WALL
-            this.setState({data: orderedData, game: newGameObject})
-          })
-          .catch(console.log)
+        const newGameObject = Object.assign({}, this.state.game)
+        newGameObject['gameState'] = WALL
+        this.setState({game: newGameObject})
       }
     }
   }
