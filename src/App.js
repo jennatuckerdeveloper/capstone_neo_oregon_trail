@@ -7,16 +7,10 @@ import ItemPack from './ItemPack'
 import DifficultyPage from './DifficultyPage'
 import GameOver from './GameOver'
 import Win from './Win'
+import Finish from './Finish'
 import Wall from './Wall'
 
 const fetch = require('node-fetch')
-
-// i have an asynchronicity problem --> the user signs, but their brick does not show up until they reload the page
-/*
-the fetch call happens before the component mounts
-the setState is called then
-the fetch and call need to be done again when a component loads
-*/
 
 const DIFFICULTY = 'difficulty'
 const NAMING = 'naming'
@@ -26,11 +20,13 @@ const PLAYING = 'playing'
 const GAMEOVER = 'gameover'
 const WIN = 'win'
 const FINISH = 'finish'
+const NOT_SET = 'notSet'
 const CHANGING = 'changing'
 const WALL = 'wall'
 const YOU = 'You'
-const DEAD = 'dead'
 const ALIVE = 'alive'
+const DEAD = 'dead'
+const DEPRESSED = 'depressed'
 const RETURN = 13
 const SPACEBAR = 32
 const GOOD = 'good'
@@ -38,6 +34,7 @@ const FAIR = 'fair'
 const POOR = 'poor'
 const Y = 'y'
 const TRAIL_MILES = 1000
+const USER_PLAY_OF_1 = '1'
 
 const randomGenerator = function (lowest, highest) {
   const min = Math.ceil(lowest)
@@ -49,7 +46,10 @@ const checkForSpecialCharacter = function (e) {
   return [RETURN, SPACEBAR].includes(e.keyCode)
 }
 
+// PackingMenu and itemRepresentation are arrays that map the order of inventory keys to string representations.
+
 const packingMenu = ['waterFilter', 'solarPanel', 'gps', 'tent', 'sleepingBag', 'clothing', 'food']
+// mirror the inventory keys in state
 
 const itemRepresentation = [
   'water filters',
@@ -60,7 +60,9 @@ const itemRepresentation = [
   'sets of clothes',
   'pounds of food'
 ]
+// string representations of inventory for user to read
 
+// maps the limits on inventory items for different difficulty levels
 const difficultyLevels = {
   1: {
     waterFilter: 4,
@@ -97,7 +99,7 @@ class App extends Component {
     this.state = {
       game: {
         gameState: FINISH,
-        difficulty: 'notSet',
+        difficulty: NOT_SET,
         gameMessage: ''
       },
       progress: {
@@ -151,7 +153,6 @@ class App extends Component {
   }
 
   walk () {
-    // walk is the only thing that will set state
     let forSetState
     const milesGained = randomGenerator(12, 25)
     const newProgress = Object.assign({}, this.state.progress)
@@ -168,28 +169,27 @@ class App extends Component {
   finishGame (progress) {
     const gameStateObject = Object.assign({}, this.state.game)
     gameStateObject['gameState'] = WIN
-    const progressObject = Object.assign({}, this.state.progress)
     return {
       game: gameStateObject,
-      progress: progressObject
+      progress: progress
     }
   }
 
   continueGame (progressObj) {
     let newGameMessage = ''
-    const peopleLiving = this.ignoreStatusDead(this.state.people) // removes all dead characters from play
-    let lessHealthPeopleList = this.peopleLoseHealth(peopleLiving) // decrements all charaters' health, higher decrement if no food
-    let newCharacterList = this.statusDeadChange(lessHealthPeopleList) // changes stauts of one character with health below 0 to "dead"
-    newGameMessage = this.starvedCharacterMessage(newCharacterList) // returns message or empty string
+    const peopleLiving = this.ignoreStatusDead(this.state.people)
+    let lessHealthPeopleList = this.peopleLoseHealth(peopleLiving)
+    let newCharacterList = this.statusDeadChange(lessHealthPeopleList)
+    newGameMessage = this.starvedCharacterMessage(newCharacterList)
     let noMessage = newGameMessage.length < 1
     const newFood = this.decrementFood(newCharacterList)
-    if (this.state.inventory.food > 0 && newFood.food <= 0) { // creates game message when player runs out of food
+    if (this.state.inventory.food > 0 && newFood.food <= 0) {
       newGameMessage = 'You have run out of food.'
     }
     if (noMessage) {
       const badLuck = randomGenerator(1, 6) === 3
       const luck = randomGenerator(1, 4)
-      newCharacterList = this.randomCharacterDeath(newCharacterList, badLuck, luck) // returns character list with a depresed or dead character
+      newCharacterList = this.randomCharacterDeath(newCharacterList, badLuck, luck)
       const newlyDepressed = newCharacterList.filter((person) => person.status === 'depressed').filter((person) => person in this.state.people)
       const newlyDead = newCharacterList.filter((person) => person.status === 'dead').filter((person) => person in this.state.people)
       const anyNewDepressed = newlyDepressed.length > 0
@@ -205,11 +205,11 @@ class App extends Component {
           : `${newlyDeadName} has died of melancholy.`
       }
     }
-    const youIsDead = this.isYouDead(newCharacterList) // bool
-    const newGameObj = { // gameObj changed for 'You' dead, ends game
-      gameState: youIsDead ? GAMEOVER : PLAYING, // continues or ends game depending on if 'You' in new people list is dead
-      difficulty: this.state.game.difficulty, // preserves difficulty
-      gameMessage: newGameMessage // new game message
+    const youIsDead = this.isYouDead(newCharacterList)
+    const newGameObj = {
+      gameState: youIsDead ? GAMEOVER : PLAYING,
+      difficulty: this.state.game.difficulty,
+      gameMessage: newGameMessage
     }
 
     return {
@@ -221,7 +221,7 @@ class App extends Component {
   }
 
   starvedCharacterMessage (characterList) {
-    const deadThisPlay = characterList.filter((person) => person.status === 'dead')
+    const deadThisPlay = characterList.filter((person) => person.status === DEAD)
     if (deadThisPlay.length > 0) {
       const deadPersonName = deadThisPlay[0].name
       const message = deadPersonName === 'You'
@@ -241,15 +241,15 @@ class App extends Component {
   }
 
   peopleLoseHealth (peopleLiving) {
-    const lostHealth = this.state.inventory.food > 0 ? 5 : 20 // correct 0 to 5
+    const lostHealth = this.state.inventory.food > 0 ? 5 : 20
     const peopleList = peopleLiving.map(function (character) { character.health -= lostHealth; return character })
     return peopleList
   }
 
   decrementFood (newCharacterList) {
     const inventoryObject = Object.assign({}, this.state.inventory)
-    const foodPortions = newCharacterList.length // number of people living and eating
-    const foodLost = randomGenerator(2 * foodPortions, 5 * foodPortions) // pounds eaten
+    const foodPortions = newCharacterList.length
+    const foodLost = randomGenerator(2 * foodPortions, 5 * foodPortions)
     let newFood // pounds of food
     if (this.state.inventory.food > 0) {
       newFood = inventoryObject.food - foodLost
@@ -272,7 +272,6 @@ class App extends Component {
   }
 
   statusDeadChange (peopleList) {
-    // changes one character's status to 'dead' when any number of characters health below 0
     let newList = peopleList.map((person) => Object.assign({}, person))
     const anyoneDead = newList.filter((person) => person.health <= 0)
     if (anyoneDead.length > 0) {
@@ -290,12 +289,12 @@ class App extends Component {
       return peopleList
     }
     let newPeopleList = peopleList.map((person) => Object.assign({}, person))
-    const depressedCharacter = newPeopleList.find((person) => person.status === 'depressed')
+    const depressedCharacter = newPeopleList.find((person) => person.status === DEPRESSED)
     if (depressedCharacter === undefined) {
       const randomPersonName = newPeopleList[Math.floor(Math.random() * newPeopleList.length)].name
       const randomPersonObject = newPeopleList.find((person) => person.name === randomPersonName)
       const randomPersonPosition = newPeopleList.indexOf(randomPersonObject)
-      newPeopleList[randomPersonPosition].status = 'depressed'
+      newPeopleList[randomPersonPosition].status = DEPRESSED
     } else {
       const depressedCharacterPosition = newPeopleList.indexOf(depressedCharacter)
       if (luck === 1) {
@@ -309,7 +308,7 @@ class App extends Component {
 
   onUserPlay (e) {
     if (checkForSpecialCharacter(e)) {
-      if (e.target.value === '1') {
+      if (e.target.value === USER_PLAY_OF_1) {
         this.walk()
       }
     }
@@ -437,7 +436,7 @@ class App extends Component {
         const playerName = e.target.value
         const allCharacters = this.state.people.map((person) => Object.assign(person))
         const deadCharacters = allCharacters.filter((person) => person.status === DEAD)
-        const aliveCharacters = allCharacters.filter((person) => person.status === ALIVE || person.status === 'depressed')
+        const aliveCharacters = allCharacters.filter((person) => person.status === ALIVE || person.status === DEPRESSED)
         const lost = deadCharacters.map((person) => person.name)
         const survived = aliveCharacters.map((person) => person.name)
         const youIndex = survived.indexOf(YOU)
@@ -537,15 +536,9 @@ class App extends Component {
       )
     } else if (this.state.game.gameState === FINISH) {
       return (
-        <div>
-          <p>The National Parks Service has turned the walls of a central Ranger
-          Station into a monument to those who have taken the trail.</p>
-          <p>
-            Please enter your name if you want your team remembered on this monument.
-            <input type='text' onKeyDown={this.signWall} />
-          </p>
-          <p>Otherwise, press leave blank and press SPACEBAR or ENTER</p>
-        </div>
+        <Finish
+          signWall={this.signWall}
+        />
       )
     } else if (this.state.game.gameState === WALL) {
       return (
