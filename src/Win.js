@@ -13,7 +13,7 @@ export default class Win extends Component {
         <div id='gameMessage'>You have reached the Cascades!</div>
         <div id='gameOver' >
           <p>You Win!</p>
-          <p>See who has walked the trail. <input type='text' onKeyDown={this.props.onFinish} /> </p>
+          <p>See who has walked the trail. <input type='text' id='finish' onKeyDown={this.props.onFinish} /> </p>
         </div>
       </div>
     )

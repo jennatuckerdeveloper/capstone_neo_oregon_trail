@@ -98,7 +98,7 @@ class App extends Component {
     super(props)
     this.state = {
       game: {
-        gameState: FINISH,
+        gameState: DIFFICULTY,
         difficulty: NOT_SET,
         gameMessage: ''
       },
@@ -150,6 +150,14 @@ class App extends Component {
     this.handleNumberToPack = this.handleNumberToPack.bind(this)
     this.onFinish = this.onFinish.bind(this)
     this.signWall = this.signWall.bind(this)
+  }
+
+  onUserPlay (e) {
+    if (checkForSpecialCharacter(e)) {
+      if (e.target.value === USER_PLAY_OF_1) {
+        this.walk()
+      }
+    }
   }
 
   walk () {
@@ -306,14 +314,6 @@ class App extends Component {
     return newPeopleList
   }
 
-  onUserPlay (e) {
-    if (checkForSpecialCharacter(e)) {
-      if (e.target.value === USER_PLAY_OF_1) {
-        this.walk()
-      }
-    }
-  }
-
   healthRepresentation (healthScore) {
     if (healthScore <= 100 && healthScore >= 80) {
       return GOOD
@@ -431,8 +431,12 @@ class App extends Component {
 
   signWall (e) {
     if (checkForSpecialCharacter(e)) {
+      console.log('signWall triggered')
       const userEntry = e.target.value
+      console.log('>>>', userEntry)
+      console.log(typeof (userEntry))
       if (userEntry !== '') {
+        console.log('in if')
         const playerName = e.target.value
         const allCharacters = this.state.people.map((person) => Object.assign(person))
         const deadCharacters = allCharacters.filter((person) => person.status === DEAD)
@@ -461,6 +465,17 @@ class App extends Component {
             const newGameObject = Object.assign({}, this.state.game)
             newGameObject['gameState'] = WALL
             this.setState({game: newGameObject})
+          })
+          .catch(console.log)
+      } else {
+        console.log('else ran')
+        fetch('https://neo-oregon-trail.firebaseio.com/wall.json')
+          .then((response) => response.json())
+          .then((allData) => {
+            const orderedData = Object.entries(allData).reverse()
+            const newGameObject = Object.assign({}, this.state.game)
+            newGameObject['gameState'] = WALL
+            this.setState({data: orderedData, game: newGameObject})
           })
           .catch(console.log)
       }

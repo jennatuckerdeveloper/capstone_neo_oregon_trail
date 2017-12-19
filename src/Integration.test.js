@@ -243,4 +243,48 @@ describe('integration testing', () => {
     const gameMessage = app.find('#gameMessage').text()
     expect(gameMessage).toBe('You have run out of food.')
   })
+
+  it('loads the Win component when the miles go over the TRAIL_MILES and finishGame is run', () => {
+    toNaming()
+    toPacking()
+    toPlaying()
+    app.setState({progress: {miles: 999, days: 74}})
+    const mockPlayEvent = {target: {value: '1'}, keyCode: 13}
+    const playInput = app.find('#play')
+    playInput.simulate('keyDown', mockPlayEvent)
+    const winComponent = app.find('Win')
+    expect(winComponent.length).toBe(1)
+  })
+  it('loads a Finish component when the user continues from win screen', () => {
+    toNaming()
+    toPacking()
+    toPlaying()
+    app.setState({progress: {miles: 999, days: 74}})
+    const mockPlayEvent = {target: {value: '1'}, keyCode: 13}
+    const playInput = app.find('#play')
+    playInput.simulate('keyDown', mockPlayEvent)
+    const afterWin = app.find('#finish')
+    afterWin.simulate('keyDown')
+    const finishComponent = app.find('Finish')
+    expect(finishComponent.length).toBe(1)
+  })
+
+  it('loads a Wall component when the user continues from finish screen', () => {
+    toNaming()
+    toPacking()
+    toPlaying()
+    app.setState({progress: {miles: 999, days: 74}})
+    const mockPlayEvent = {target: {value: '1'}, keyCode: 13}
+    const playInput = app.find('#play')
+    playInput.simulate('keyDown', mockPlayEvent)
+    const afterWin = app.find('#finish')
+    afterWin.simulate('keyDown')
+    const signWall = app.find('#signWall')
+    // console.log('before state', app.state())
+    const mockSignEvent = {keyCode: 13, target: {value: ''}}
+    signWall.simulate('keyDown', mockSignEvent)
+    // console.log('after state', app.state())
+    // const wallComponent = app.find('Wall')
+    // expect(wallComponent.length).toBe(1)
+  })
 })
