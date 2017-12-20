@@ -8,13 +8,22 @@ import App from './App'
 import Enzyme, { mount } from 'enzyme'
 import Adapter from 'enzyme-adapter-react-16'
 
+import fetch from 'jest-fetch-mock'
+import previousWall from './previousWall'
+
 Enzyme.configure({ adapter: new Adapter() })
+window.fetch = fetch
 
 describe('integration testing', () => {
   let app
 
-  beforeEach(() => {
+  beforeEach((done) => {
+    fetch.mockResponse(JSON.stringify(previousWall))
     app = mount(<App />)
+    setImmediate(() => {
+      app.update()
+      done()
+    })
   })
 
   const toNaming = function () {
@@ -48,6 +57,7 @@ describe('integration testing', () => {
   })
 
   it('loads a DifficultyPage component when the state game gameState is "difficulty', () => {
+    console.log(app.state().data)
     const difficultyPageComponent = app.find('DifficultyPage').length
     expect(difficultyPageComponent).toBe(1)
   })

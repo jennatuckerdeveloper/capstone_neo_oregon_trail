@@ -98,7 +98,7 @@ class App extends Component {
     super(props)
     this.state = {
       game: {
-        gameState: FINISH,
+        gameState: DIFFICULTY,
         difficulty: NOT_SET,
         gameMessage: ''
       },
@@ -153,12 +153,19 @@ class App extends Component {
   }
 
   componentWillMount () {
+    console.log('in componentWillMount')
     fetch('https://neo-oregon-trail.firebaseio.com/wall.json')
-      .then((response) => response.json())
+      .then((response) => {
+        console.log('first then runs')
+        return response.json()
+      })
       .then((allData) => {
+        console.log('>>>', allData)
         const orderedData = Object.entries(allData).reverse()
         this.setState({data: orderedData})
       })
+      .catch(console.log)
+    console.log('at the end')
   }
 
   onUserPlay (e) {
@@ -457,6 +464,7 @@ class App extends Component {
             lost: lost
           })
         }
+        console.log(pkg)
         fetch('https://neo-oregon-trail.firebaseio.com/wall.json', pkg)
           .then((response) => {
             /* eslint-disable no-console */
