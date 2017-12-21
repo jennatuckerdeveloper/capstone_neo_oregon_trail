@@ -10,7 +10,10 @@ import Win from './Win'
 import Finish from './Finish'
 import Wall from './Wall'
 
-const fetch = require('node-fetch')
+// const fetch = require('node-fetch')
+require('es6-promise').polyfill()
+require('isomorphic-fetch')
+/* global fetch */
 
 const DIFFICULTY = 'difficulty'
 const NAMING = 'naming'
@@ -98,7 +101,7 @@ class App extends Component {
     super(props)
     this.state = {
       game: {
-        gameState: DIFFICULTY,
+        gameState: FINISH,
         difficulty: NOT_SET,
         gameMessage: ''
       },
