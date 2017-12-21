@@ -120,21 +120,21 @@ class App extends Component {
         health: 100,
         status: ALIVE
       }, {
-        name: 'Two',
+        name: 'Eustice',
         health: 100,
-        status: ALIVE
+        status: DEAD
       }, {
-        name: 'Three',
+        name: 'Marlow',
         health: 100,
-        status: ALIVE
+        status: DEAD
       },
       {
-        name: 'Four',
+        name: 'Johnathan',
         health: 100,
-        status: ALIVE
+        status: DEAD
       },
       {
-        name: 'Five',
+        name: 'Eric',
         health: 100,
         status: ALIVE
       }
@@ -153,19 +153,19 @@ class App extends Component {
   }
 
   componentWillMount () {
-    console.log('in componentWillMount')
+    // console.log('in componentWillMount')
     fetch('https://neo-oregon-trail.firebaseio.com/wall.json')
       .then((response) => {
-        console.log('first then runs')
+        // console.log('first then runs')
         return response.json()
       })
       .then((allData) => {
-        console.log('>>>', allData)
+        // console.log('>>>', allData)
         const orderedData = Object.entries(allData).reverse()
         this.setState({data: orderedData})
       })
       .catch(console.log)
-    console.log('at the end')
+    // console.log('at the end')
   }
 
   onUserPlay (e) {
@@ -464,7 +464,7 @@ class App extends Component {
             lost: lost
           })
         }
-        console.log(pkg)
+        // console.log(pkg)
         fetch('https://neo-oregon-trail.firebaseio.com/wall.json', pkg)
           .then((response) => {
             /* eslint-disable no-console */

@@ -57,7 +57,7 @@ describe('integration testing', () => {
   })
 
   it('loads a DifficultyPage component when the state game gameState is "difficulty', () => {
-    console.log(app.state().data)
+    // console.log(app.state().data)
     const difficultyPageComponent = app.find('DifficultyPage').length
     expect(difficultyPageComponent).toBe(1)
   })
