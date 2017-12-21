@@ -56,9 +56,9 @@ export default class Wall extends Component {
           })
         }
         return (
-          <div className='brick' id={key} key={brickKey}>
+          <div className='brick' id={brickKey} key={brickKey}>
             <p id='lost' >Lost on the trail: {lostText}</p>
-            <p id='survived' >Suvived by: {survivedText}</p>
+            <p id='survived' >Survived by: {survivedText}</p>
           </div>
         )
       }

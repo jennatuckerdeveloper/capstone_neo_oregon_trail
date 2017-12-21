@@ -29,9 +29,10 @@ describe('integration testing', () => {
       />
     )
   })
-  // it('displays a brick for each of the values in data', () => {
-
-  // })
+  it('displays a brick for each of the values in data', () => {
+    const bricks = wrapper.find('.brick')
+    expect(bricks.length).toBe(4)
+  })
   it('displays a brick with only surviving characters properly', () => {
     const fiveSurvivors = wrapper.find('#brick-L0uG5PXW0U1U7L1NTW4')
     const brickText = fiveSurvivors.text()
@@ -39,18 +40,17 @@ describe('integration testing', () => {
   })
   it('displays a brick with one character who died properly', () => {
     const fourSurvivors = wrapper.find('#brick-L0uGFGm9SHKAOfhooS9')
-    console.log(fourSurvivors)
-    // const brickText = fiveSurvivors.text()
-    // expect(brickText).toBe('Took the trail: Lizzy, James, Ashley, Clara, and Mo  ')
+    const brickText = fourSurvivors.text()
+    expect(brickText).toBe('Lost on the trail: JoshSurvived by: Brian, Bonnie, Ilona, and Hawker  ')
   })
-  // it('displays a brick with two characters who died properly', () => {
-  //   const dayCountDisplayed = wrapper.find('#dayCount').text()
-  //   expect(dayCountDisplayed).toBe('Days on the trail: 3')
-  // })
-  // it('displays a brick with three or more charactrers who died properly', () => {
-
-  // })
-  // it('displays more than one brick properly', () => {
-
-  // })
+  it('displays a brick with two characters who died properly', () => {
+    const threeSurvivors = wrapper.find('#brick-L0uGQ0x9EELcLMZtyRD')
+    const brickText = threeSurvivors.text()
+    expect(brickText).toBe('Lost on the trail: Anna and BenjaminSurvived by: Dannie, Willow, and Remy  ')
+  })
+  it('displays a brick with three or more charactrers who died properly', () => {
+    const twoSurvivors = wrapper.find('#brick-L0uG_kOCdIIYpzQsp6M')
+    const brickText = twoSurvivors.text()
+    expect(brickText).toBe('Lost on the trail: Eustice, Marlow, and Johnathan  Survived by: Sam and Eric')
+  })
 })
