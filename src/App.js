@@ -274,7 +274,7 @@ class App extends Component {
     const inventoryObject = Object.assign({}, this.state.inventory)
     const foodPortions = newCharacterList.length
     const foodLost = randomGenerator(2 * foodPortions, 5 * foodPortions)
-    let newFood // pounds of food
+    let newFood
     if (this.state.inventory.food > 0) {
       newFood = inventoryObject.food - foodLost
       if (newFood < 0) {

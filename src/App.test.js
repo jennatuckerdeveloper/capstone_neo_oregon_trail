@@ -58,13 +58,6 @@ describe('integration testing', () => {
     expect(gameStateChange).toBe('win')
   })
 
-  // it('loads the Win component when the miles go over the TRAIL_MILES and finishGame is run', () => {
-  //   app.setState({progress: {miles: 999, days: 74}})
-  //   app.finishGame(app.state.progress)
-  //   const winComponent = app.find('Win')
-  //   expect(winComponent.length).toBe(1)
-  // })
-
   it('handleCharacter changes one status to "dead" when any number of people health scores are 0 or less', () => {
     const mixedStatusPeopleList = [
       {name: 'You', status: 'depressed', health: 0},

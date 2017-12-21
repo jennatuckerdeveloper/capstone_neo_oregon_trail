@@ -11,9 +11,6 @@ Enzyme.configure({ adapter: new Adapter() })
 
 /* globals beforeEach describe it expect */
 
-// put the proper data in the databse to get this back
-// copy the curl return and pass it into data
-
 describe('integration testing', () => {
   let wrapper
 
