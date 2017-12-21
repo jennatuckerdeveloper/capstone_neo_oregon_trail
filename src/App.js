@@ -123,21 +123,21 @@ class App extends Component {
         health: 100,
         status: ALIVE
       }, {
-        name: 'Eustice',
+        name: 'Two',
         health: 100,
-        status: DEAD
+        status: DEPRESSED
       }, {
-        name: 'Marlow',
+        name: 'Three',
         health: 100,
-        status: DEAD
+        status: ALIVE
       },
       {
-        name: 'Johnathan',
+        name: 'Four',
         health: 100,
-        status: DEAD
+        status: ALIVE
       },
       {
-        name: 'Eric',
+        name: 'Five',
         health: 100,
         status: ALIVE
       }
