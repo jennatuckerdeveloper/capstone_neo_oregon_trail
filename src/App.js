@@ -125,7 +125,7 @@ class App extends Component {
       }, {
         name: 'Two',
         health: 100,
-        status: DEPRESSED
+        status: ALIVE
       }, {
         name: 'Three',
         health: 100,
