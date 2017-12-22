@@ -3,7 +3,7 @@ import React, { Component } from 'react'
 export default class Win extends Component {
   render () {
     return (
-      <div className='WIN'>
+      <div className='win'>
         <div id='gameStatus' >
           <p>Days on the trail: {this.props.days}</p>
           <p>Miles: {this.props.miles}</p>
@@ -13,6 +13,7 @@ export default class Win extends Component {
         <div id='gameMessage'>You have reached the Cascades!</div>
         <div id='gameOver' >
           <p>You Win!</p>
+          <p>See who has walked the trail. <input type='text' id='finish' onKeyDown={this.props.onFinish} /> </p>
         </div>
       </div>
     )

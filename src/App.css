@@ -33,3 +33,10 @@ p {
   justify-content: space-between;
   margin-right: 30vw
 }
+
+body {
+  background: black;
+  color: #ffffff;
+  font-family: Courier;
+  margin: 30px
+}

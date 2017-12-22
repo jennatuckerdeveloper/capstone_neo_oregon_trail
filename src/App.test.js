@@ -16,7 +16,7 @@ describe('integration testing', () => {
     app = wrapper.instance()
   })
 
-  it('returns a people object with one person with the status depressed when badLuck is true and luck is 1', () => {
+  it('randomCharacterDeath returns a people list with one person with the status depressed when badLuck is true and luck is 1', () => {
     const peopleList = app.state.people
     const changedList = app.randomCharacterDeath(peopleList, true, 1)
     const depressed = changedList.find((person) => person.status === 'depressed')
@@ -24,7 +24,7 @@ describe('integration testing', () => {
     expect(bool).toBe(true)
   })
 
-  it('returns a people object with one person with the status dead when a person status is "depressed", badLuck is true, luck is 2', () => {
+  it('randomCharacterDeath returns a people list with one person with the status dead when a person status is "depressed", badLuck is true, luck is 2', () => {
     app.setState({people: [{name: 'Joe', status: 'depressed', health: 80}]})
     const peopleList = app.state.people
     const changedList = app.randomCharacterDeath(peopleList, true, 2)
@@ -33,7 +33,7 @@ describe('integration testing', () => {
     expect(bool).toBe(true)
   })
 
-  it('returns a people object unchanged when a character status is "depressed" and randomCharacterDeath run with badLuck is true and luck is 3', () => {
+  it('randomCharacterDeath returns a people list unchanged when a character status is "depressed" and randomCharacterDeath run with badLuck is true and luck is 3', () => {
     const mixedStatusPeopleList = [
       {name: 'You', status: 'depressed', health: 0},
       {name: 'Dan', status: 'alive', health: 0},
@@ -45,7 +45,7 @@ describe('integration testing', () => {
     expect(changedList).toEqual(changedList)
   })
 
-  it('returns a a people object unchanged when badLuck is false', () => {
+  it('randomCharacterDeath returns a people list unchanged when badLuck is false', () => {
     const peopleList = app.state.people
     const changedList = app.randomCharacterDeath(peopleList, false, 4)
     expect(peopleList).toEqual(changedList)
