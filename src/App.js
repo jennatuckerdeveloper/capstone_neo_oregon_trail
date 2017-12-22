@@ -101,7 +101,7 @@ class App extends Component {
     super(props)
     this.state = {
       game: {
-        gameState: DIFFICULTY,
+        gameState: FINISH,
         difficulty: NOT_SET,
         gameMessage: ''
       },
