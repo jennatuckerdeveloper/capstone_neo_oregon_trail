@@ -1,7 +1,7 @@
 {
   "name": "neo_oregon_trail",
   "version": "0.1.0",
-  "homepage": "http://jmtucker7.github.io/capstone_neo_oregon_trail/",
+  "homepage": "http://jmtucker7.github.io/capstone_neo_oregon_trail",
   "private": true,
   "dependencies": {
     "enzyme": "^3.2.0",
