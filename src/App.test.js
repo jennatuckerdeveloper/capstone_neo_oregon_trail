@@ -5,7 +5,11 @@ import App from './App'
 import Enzyme, { shallow } from 'enzyme'
 import Adapter from 'enzyme-adapter-react-16'
 
+// import fetch from 'jest-fetch-mock'
+// import currentWall from './currentWall'
+
 Enzyme.configure({ adapter: new Adapter() })
+// window.fetch = fetch
 
 describe('integration testing', () => {
   let wrapper
@@ -95,4 +99,19 @@ describe('integration testing', () => {
     const bool = app.isYouDead(characterList)
     expect(bool).toBe(false)
   })
+
+  // it('loads data when user enters their name and signWall is triggered', () => {
+  //   const previousData = app.state.data
+  //   // console.log('previous data', previousData)
+  //   fetch.mockResponses([], [JSON.stringify(currentWall)])
+  //   const mockSignEvent = {keyCode: 13, target: {value: 'Benjamin J'}}
+  //   app.signWall(mockSignEvent)
+  //   // this does change the game state to 'win', so signWall is triggered
+  //   // data stays the same before and after, so the fetchMock does not work properly
+  //   // uncomment window.fetch = fetch creates an error: unexpected JSON response end
+  //   const afterData = app.state.data
+  //   // console.log('afterData', afterData)
+  //   const bool = afterData.length > previousData
+  //   expect(bool).toBe(true)
+  // })
 })

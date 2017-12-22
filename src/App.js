@@ -156,19 +156,15 @@ class App extends Component {
   }
 
   componentWillMount () {
-    // console.log('in componentWillMount')
     fetch('https://neo-oregon-trail.firebaseio.com/wall.json')
       .then((response) => {
-        // console.log('first then runs')
         return response.json()
       })
       .then((allData) => {
-        // console.log('>>>', allData)
         const orderedData = Object.entries(allData).reverse()
         this.setState({data: orderedData})
       })
       .catch(console.log)
-    // console.log('at the end')
   }
 
   onUserPlay (e) {
@@ -467,23 +463,28 @@ class App extends Component {
             lost: lost
           })
         }
-        // console.log(pkg)
-        fetch('https://neo-oregon-trail.firebaseio.com/wall.json', pkg)
-          .then((response) => {
-            /* eslint-disable no-console */
-            return fetch('https://neo-oregon-trail.firebaseio.com/wall.json')
-          })
-          .then((response) => response.json())
-          .then((allData) => {
-            const orderedData = Object.entries(allData).reverse()
-            this.setState({data: orderedData})
-          })
-          .then(() => {
-            const newGameObject = Object.assign({}, this.state.game)
-            newGameObject['gameState'] = WALL
-            this.setState({game: newGameObject})
-          })
-          .catch(console.log)
+        console.log('pkg', pkg)
+        const newGameObject = Object.assign({}, this.state.game)
+        newGameObject['gameState'] = WALL
+        this.setState({game: newGameObject})
+        // fetch('https://neo-oregon-trail.firebaseio.com/wall.json', pkg)
+        //   .then((response) => {
+        //     /* eslint-disable no-console */
+        //     console.log('response', response)
+        //     return fetch('https://neo-oregon-trail.firebaseio.com/wall.json')
+        //   })
+        //   .then((response) => response.json())
+        //   .then((allData) => {
+        //     console.log('allData', allData)
+        //     const orderedData = Object.entries(allData).reverse()
+        //     this.setState({data: orderedData})
+        //   })
+        //   .then(() => {
+        //     const newGameObject = Object.assign({}, this.state.game)
+        //     newGameObject['gameState'] = WALL
+        //     this.setState({game: newGameObject})
+        //   })
+        //   .catch(console.log)
       } else {
         const newGameObject = Object.assign({}, this.state.game)
         newGameObject['gameState'] = WALL

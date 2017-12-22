@@ -51,13 +51,30 @@ describe('integration testing', () => {
     finishedPacking.simulate('keyDown', mockOnConfirmPack)
   }
 
+  const toWin = function () {
+    app.setState({progress: {miles: 999, days: 74}})
+    const mockPlayEvent = {target: {value: '1'}, keyCode: 13}
+    const playInput = app.find('#play')
+    playInput.simulate('keyDown', mockPlayEvent)
+  }
+
+  const toFinish = function () {
+    const afterWin = app.find('#finish')
+    afterWin.simulate('keyDown')
+  }
+
   it('renders without crashing', () => {
     const div = document.createElement('div')
     ReactDOM.render(<App />, div)
   })
 
+  it('loads data when App component mounts', () => {
+    const data = app.state().data
+    const bool = data.length > 0
+    expect(bool).toBe(true)
+  })
+
   it('loads a DifficultyPage component when the state game gameState is "difficulty', () => {
-    // console.log(app.state().data)
     const difficultyPageComponent = app.find('DifficultyPage').length
     expect(difficultyPageComponent).toBe(1)
   })
@@ -258,10 +275,7 @@ describe('integration testing', () => {
     toNaming()
     toPacking()
     toPlaying()
-    app.setState({progress: {miles: 999, days: 74}})
-    const mockPlayEvent = {target: {value: '1'}, keyCode: 13}
-    const playInput = app.find('#play')
-    playInput.simulate('keyDown', mockPlayEvent)
+    toWin()
     const winComponent = app.find('Win')
     expect(winComponent.length).toBe(1)
   })
@@ -269,32 +283,22 @@ describe('integration testing', () => {
     toNaming()
     toPacking()
     toPlaying()
-    app.setState({progress: {miles: 999, days: 74}})
-    const mockPlayEvent = {target: {value: '1'}, keyCode: 13}
-    const playInput = app.find('#play')
-    playInput.simulate('keyDown', mockPlayEvent)
-    const afterWin = app.find('#finish')
-    afterWin.simulate('keyDown')
+    toWin()
+    toFinish()
     const finishComponent = app.find('Finish')
     expect(finishComponent.length).toBe(1)
   })
 
-  it('loads a Wall component when the user continues from finish screen', () => {
+  it('loads a Wall component when the user continues from finish screen without signing', () => {
     toNaming()
     toPacking()
     toPlaying()
-    app.setState({progress: {miles: 999, days: 74}})
-    const mockPlayEvent = {target: {value: '1'}, keyCode: 13}
-    const playInput = app.find('#play')
-    playInput.simulate('keyDown', mockPlayEvent)
-    const afterWin = app.find('#finish')
-    afterWin.simulate('keyDown')
+    toWin()
+    toFinish()
     const signWall = app.find('#signWall')
-    // console.log('before state', app.state())
     const mockSignEvent = {keyCode: 13, target: {value: ''}}
     signWall.simulate('keyDown', mockSignEvent)
-    // console.log('after state', app.state())
-    // const wallComponent = app.find('Wall')
-    // expect(wallComponent.length).toBe(1)
+    const wallComponent = app.find('Wall')
+    expect(wallComponent.length).toBe(1)
   })
 })
